@@ -80,6 +80,7 @@ pub fn bench_fn<S: Sort, T: Ord + std::fmt::Debug>(
     }
 }
 
+// NOTE: this function defines the algorithms that are used for benches
 pub fn bench<T: Ord + std::fmt::Debug>(
     c: &mut Criterion,
     test_len: usize,
@@ -104,7 +105,7 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     }
 
     // --- Stable sorts ---
-
+    #[cfg(feature = "rust_std_sys")]
     bench_inst!(stable::rust_std);
 
     #[cfg(feature = "rust_std_vendored")]
@@ -151,8 +152,28 @@ pub fn bench<T: Ord + std::fmt::Debug>(
 
     // --- Unstable sorts ---
 
+    #[cfg(feature = "partition_research")]
+    bench_inst!(unstable::rust_partition_research_1);
+
+    #[cfg(feature = "partition_research")]
+    bench_inst!(unstable::rust_partition_research_2);
+
+    #[cfg(feature = "partition_research")]
+    bench_inst!(unstable::rust_partition_research_3);
+
+    #[cfg(feature = "partition_research")]
+    bench_inst!(unstable::rust_partition_research_4);
+
+    #[cfg(feature = "partition_research")]
+    bench_inst!(unstable::rust_partition_research_5);
+
+    #[cfg(feature = "partition_research")]
+    bench_inst!(unstable::rust_partition_research_6);
+
+    #[cfg(feature = "rust_ipnsort")]
     bench_inst!(unstable::rust_ipnsort);
 
+    #[cfg(feature = "rust_std_sys")]
     bench_inst!(unstable::rust_std);
 
     #[cfg(feature = "rust_std_vendored")]
@@ -172,6 +193,9 @@ pub fn bench<T: Ord + std::fmt::Debug>(
 
     #[cfg(feature = "cpp_pdqsort")]
     bench_inst!(unstable::cpp_pdqsort);
+
+    #[cfg(feature = "cpp_timsort")]
+    bench_inst!(stable::cpp_timsort);
 
     #[cfg(feature = "cpp_ips4o")]
     bench_inst!(unstable::cpp_ips4o);

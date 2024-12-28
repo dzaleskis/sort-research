@@ -29,6 +29,12 @@ introsort = { version = "0.6", default-features = false, optional = true }
 afsort = { version = "0.3", default-features = false, optional = true }
 sort_test_tools = { path = "sort_test_tools", default-features = false }
 ipnsort = { path = "ipnsort", default-features = false }
+partition_research_1 = { path = "partition_research_1", default-features = false }
+partition_research_2 = { path = "partition_research_2", default-features = false }
+partition_research_3 = { path = "partition_research_3", default-features = false }
+partition_research_4 = { path = "partition_research_4", default-features = false }
+partition_research_5 = { path = "partition_research_5", default-features = false }
+partition_research_6 = { path = "partition_research_6", default-features = false }
 # driftsort = { path = "../driftsort", optional = true }
 
 [dev-dependencies]
@@ -79,14 +85,22 @@ default = [
     # "bench_type_f32_total",
     # "bench_type_f64_total",
 
+    "partition_research",
+    "rust_ipnsort",
+    # ALREADY INCLUDES DRIFTSORT AND IPNSORT
+    # "rust_std_sys",
     # "cpp_std_sys",
     # "cpp_std_libcxx",
     # "cpp_std_gcc4_3",
     # "cpp_pdqsort",
+    # "cpp_timsort",
     # "cpp_powersort",
+    # DOES NOT WORK ON M1
     # "cpp_simdsort",
     # "cpp_vqsort",
+    # DOES NOT WORK ON M1
     # "cpp_intel_avx512",
+    # # DOES NOT WORK, NEEDS TBB LIB
     # "cpp_ips4o",
     # "cpp_blockquicksort",
     # "cpp_gerbens_qsort",
@@ -97,6 +111,7 @@ default = [
     # "c_fluxsort",
     # "singeli_singelisort",
     # "golang_std",
+    # PREVIOUS RUST IMPL
     # "rust_std_vendored",
     # "rust_wpwoodjr",
     # "rust_radsort",
@@ -109,6 +124,15 @@ default = [
     # "rust_grailsort",
     # "rust_afsort",
 ]
+
+# Enable support for partition research prototypes.
+partition_research = []
+
+# Enable support for ipnsort.
+rust_ipnsort = []
+
+# Enable support for Rust std::sort_unstable and std::sort.
+rust_std_sys = []
 
 # Enable support for C++ std::sort and std::sort_stable.
 cpp_std_sys = []
@@ -125,6 +149,10 @@ cpp_std_gcc4_3 = []
 # Enable support for cpp_pdqsort.
 # Uses system C++ standard lib.
 cpp_pdqsort = []
+
+# Enable support for cpp_timsort.
+# Uses system C++ standard lib.
+cpp_timsort = []
 
 # Enable powersort from the Multiway Powersort (2022) paper.
 # Uses system C++ standard lib.

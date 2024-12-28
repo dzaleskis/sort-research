@@ -34,6 +34,10 @@ pub mod cpp_std_gcc4_3;
 #[cfg(feature = "cpp_powersort")]
 pub mod cpp_powersort;
 
+// Call timsort sort via FFI.
+#[cfg(feature = "cpp_timsort")]
+pub mod cpp_timsort;
+
 // Call powersort_4way sort via FFI.
 #[cfg(feature = "cpp_powersort")]
 pub mod cpp_powersort_4way;

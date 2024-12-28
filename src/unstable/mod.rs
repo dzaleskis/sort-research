@@ -2,6 +2,30 @@ pub mod rust_ipnsort;
 
 pub mod rust_std;
 
+// basic hoare
+#[cfg(feature = "partition_research")]
+pub mod rust_partition_research_1;
+
+// hoare with cyclic permut
+#[cfg(feature = "partition_research")]
+pub mod rust_partition_research_2;
+
+// hoare with block branchless and cyclic permut
+#[cfg(feature = "partition_research")]
+pub mod rust_partition_research_3;
+
+// basic lomuto
+#[cfg(feature = "partition_research")]
+pub mod rust_partition_research_4;
+
+// branchless lomuto with cyclic permut
+#[cfg(feature = "partition_research")]
+pub mod rust_partition_research_5;
+
+// block-based branchless lomuto
+#[cfg(feature = "partition_research")]
+pub mod rust_partition_research_6;
+
 #[cfg(feature = "rust_std_vendored")]
 pub mod rust_std_vendored;
 
