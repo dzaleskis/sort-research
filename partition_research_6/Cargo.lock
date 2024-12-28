@@ -26,7 +26,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
 
 [[package]]
-name = "partition_research_3"
+name = "partition_research_6"
 version = "0.1.0"
 dependencies = [
  "sort_test_tools",
