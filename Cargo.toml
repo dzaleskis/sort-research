@@ -29,12 +29,20 @@ introsort = { version = "0.6", default-features = false, optional = true }
 afsort = { version = "0.3", default-features = false, optional = true }
 sort_test_tools = { path = "sort_test_tools", default-features = false }
 ipnsort = { path = "ipnsort", default-features = false }
+
 partition_research_1 = { path = "partition_research_1", default-features = false }
 partition_research_2 = { path = "partition_research_2", default-features = false }
 partition_research_3 = { path = "partition_research_3", default-features = false }
 partition_research_4 = { path = "partition_research_4", default-features = false }
 partition_research_5 = { path = "partition_research_5", default-features = false }
 partition_research_6 = { path = "partition_research_6", default-features = false }
+
+pivot_research_1 = { path = "pivot_research_1", default-features = false }
+pivot_research_2 = { path = "pivot_research_2", default-features = false }
+pivot_research_3 = { path = "pivot_research_3", default-features = false }
+pivot_research_4 = { path = "pivot_research_4", default-features = false }
+pivot_research_5 = { path = "pivot_research_5", default-features = false }
+pivot_research_6 = { path = "pivot_research_6", default-features = false }
 # driftsort = { path = "../driftsort", optional = true }
 
 [dev-dependencies]
@@ -85,7 +93,8 @@ default = [
     # "bench_type_f32_total",
     # "bench_type_f64_total",
 
-    "partition_research",
+    # "partition_research",
+    "pivot_research",
     "rust_ipnsort",
     # ALREADY INCLUDES DRIFTSORT AND IPNSORT
     # "rust_std_sys",
@@ -127,6 +136,9 @@ default = [
 
 # Enable support for partition research prototypes.
 partition_research = []
+
+# Enable support for pivot research prototypes.
+pivot_research = []
 
 # Enable support for ipnsort.
 rust_ipnsort = []

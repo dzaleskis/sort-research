@@ -241,13 +241,22 @@ def build_implementation_meta_info():
         "cpp_pdqsort_unstable": (palette[3], "square"),
         "cpp_std_libcxx_unstable": (palette[4], "square"),
         "rust_ipn_unstable": (palette[5], "square"),
-        "rust_ipnsort_unstable": (palette[5], "circle"),
+        "rust_ipnsort_unstable": (palette[0], "circle"),
+
         "rust_partition_research_1_unstable": (palette[1], "circle"),
         "rust_partition_research_2_unstable": (palette[2], "circle"),
         "rust_partition_research_3_unstable": (palette[3], "circle"),
         "rust_partition_research_4_unstable": (palette[4], "circle"),
         "rust_partition_research_5_unstable": (palette[5], "circle"),
         "rust_partition_research_6_unstable": (palette[6], "circle"),
+
+        "rust_pivot_research_1_unstable": (palette[1], "square"),
+        "rust_pivot_research_2_unstable": (palette[2], "square"),
+        "rust_pivot_research_3_unstable": (palette[3], "square"),
+        "rust_pivot_research_4_unstable": (palette[4], "square"),
+        "rust_pivot_research_5_unstable": (palette[5], "square"),
+        "rust_pivot_research_6_unstable": (palette[6], "square"),
+
         "cpp_ips4o_unstable": (palette[6], "square"),
         "cpp_blockquicksort": (palette[7], "square"),
         "rust_tinyheapsort_unstable": (palette[7], "square"),

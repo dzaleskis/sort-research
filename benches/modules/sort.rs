@@ -152,6 +152,8 @@ pub fn bench<T: Ord + std::fmt::Debug>(
 
     // --- Unstable sorts ---
 
+    // PARTITIONS
+
     #[cfg(feature = "partition_research")]
     bench_inst!(unstable::rust_partition_research_1);
 
@@ -169,6 +171,28 @@ pub fn bench<T: Ord + std::fmt::Debug>(
 
     #[cfg(feature = "partition_research")]
     bench_inst!(unstable::rust_partition_research_6);
+
+    // PIVOTS
+
+    #[cfg(feature = "pivot_research")]
+    bench_inst!(unstable::rust_pivot_research_1);
+
+    #[cfg(feature = "pivot_research")]
+    bench_inst!(unstable::rust_pivot_research_2);
+
+    #[cfg(feature = "pivot_research")]
+    bench_inst!(unstable::rust_pivot_research_3);
+
+    #[cfg(feature = "pivot_research")]
+    bench_inst!(unstable::rust_pivot_research_4);
+
+    #[cfg(feature = "pivot_research")]
+    bench_inst!(unstable::rust_pivot_research_5);
+
+    #[cfg(feature = "pivot_research")]
+    bench_inst!(unstable::rust_pivot_research_6);
+
+    // OTHERS
 
     #[cfg(feature = "rust_ipnsort")]
     bench_inst!(unstable::rust_ipnsort);
