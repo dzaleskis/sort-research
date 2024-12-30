@@ -393,14 +393,6 @@ name = "pivot_research_4"
 version = "0.1.0"
 
 [[package]]
-name = "pivot_research_5"
-version = "0.1.0"
-
-[[package]]
-name = "pivot_research_6"
-version = "0.1.0"
-
-[[package]]
 name = "plotters"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -629,8 +621,6 @@ dependencies = [
  "pivot_research_2",
  "pivot_research_3",
  "pivot_research_4",
- "pivot_research_5",
- "pivot_research_6",
  "proc-macro2",
  "radsort",
  "rand",

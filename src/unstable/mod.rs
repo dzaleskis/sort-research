@@ -26,29 +26,21 @@ pub mod rust_partition_research_5;
 #[cfg(feature = "partition_research")]
 pub mod rust_partition_research_6;
 
-// adaptive compact ninther, branchy swapless
+// median of 3
 #[cfg(feature = "pivot_research")]
 pub mod rust_pivot_research_1;
 
-// adaptive compact ninther, branchless swapless
+// adaptive compact ninther
 #[cfg(feature = "pivot_research")]
 pub mod rust_pivot_research_2;
 
-// adaptive full ninther, branchy swapless
+// adaptive full ninther
 #[cfg(feature = "pivot_research")]
 pub mod rust_pivot_research_3;
 
-// adaptive compact ninther, branchless swapless
+// adaptive recursive ninther
 #[cfg(feature = "pivot_research")]
 pub mod rust_pivot_research_4;
-
-// adaptive recursive ninther, branchy swapless
-#[cfg(feature = "pivot_research")]
-pub mod rust_pivot_research_5;
-
-// adaptive recursive ninther, branchles swapless
-#[cfg(feature = "pivot_research")]
-pub mod rust_pivot_research_6;
 
 #[cfg(feature = "rust_std_vendored")]
 pub mod rust_std_vendored;

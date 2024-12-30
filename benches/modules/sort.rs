@@ -186,12 +186,6 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     #[cfg(feature = "pivot_research")]
     bench_inst!(unstable::rust_pivot_research_4);
 
-    #[cfg(feature = "pivot_research")]
-    bench_inst!(unstable::rust_pivot_research_5);
-
-    #[cfg(feature = "pivot_research")]
-    bench_inst!(unstable::rust_pivot_research_6);
-
     // OTHERS
 
     #[cfg(feature = "rust_ipnsort")]

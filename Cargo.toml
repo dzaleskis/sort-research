@@ -41,8 +41,6 @@ pivot_research_1 = { path = "pivot_research_1", default-features = false }
 pivot_research_2 = { path = "pivot_research_2", default-features = false }
 pivot_research_3 = { path = "pivot_research_3", default-features = false }
 pivot_research_4 = { path = "pivot_research_4", default-features = false }
-pivot_research_5 = { path = "pivot_research_5", default-features = false }
-pivot_research_6 = { path = "pivot_research_6", default-features = false }
 # driftsort = { path = "../driftsort", optional = true }
 
 [dev-dependencies]
