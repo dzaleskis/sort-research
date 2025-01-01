@@ -92,8 +92,9 @@ default = [
     # "bench_type_f64_total",
 
     # "partition_research",
-    "pivot_research",
-    "rust_ipnsort",
+    # "pivot_research",
+    "merge_policy_research",
+    # "rust_ipnsort",
     # ALREADY INCLUDES DRIFTSORT AND IPNSORT
     # "rust_std_sys",
     # "cpp_std_sys",
@@ -119,7 +120,7 @@ default = [
     # "singeli_singelisort",
     # "golang_std",
     # PREVIOUS RUST IMPL
-    # "rust_std_vendored",
+    "rust_std_vendored",
     # "rust_wpwoodjr",
     # "rust_radsort",
     # "rust_dmsort",
@@ -137,6 +138,9 @@ partition_research = []
 
 # Enable support for pivot research prototypes.
 pivot_research = []
+
+# Enable support for merge policy research prototypes.
+merge_policy_research = []
 
 # Enable support for ipnsort.
 rust_ipnsort = []

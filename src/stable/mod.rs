@@ -54,3 +54,23 @@ pub mod c_fluxsort;
 // Call golang slices.SortStable
 #[cfg(feature = "golang_std")]
 pub mod golang_std;
+
+// timsort with timsort merge policy (original)
+#[cfg(feature = "merge_policy_research")]
+pub mod rust_merge_policy_research_1;
+
+// timsort with basic shivers merge policy
+#[cfg(feature = "merge_policy_research")]
+pub mod rust_merge_policy_research_2;
+
+// timsort with length-adaptive shivers merge policy
+#[cfg(feature = "merge_policy_research")]
+pub mod rust_merge_policy_research_3;
+
+// timsort with powersort merge policy
+#[cfg(feature = "merge_policy_research")]
+pub mod rust_merge_policy_research_4;
+
+// timsort with 2-merge merge policy
+#[cfg(feature = "merge_policy_research")]
+pub mod rust_merge_policy_research_5;

@@ -186,6 +186,23 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     #[cfg(feature = "pivot_research")]
     bench_inst!(unstable::rust_pivot_research_4);
 
+    // MERGE POLICIES
+
+    #[cfg(feature = "merge_policy_research")]
+    bench_inst!(stable::rust_merge_policy_research_1);
+
+    #[cfg(feature = "merge_policy_research")]
+    bench_inst!(stable::rust_merge_policy_research_2);
+
+    #[cfg(feature = "merge_policy_research")]
+    bench_inst!(stable::rust_merge_policy_research_3);
+
+    #[cfg(feature = "merge_policy_research")]
+    bench_inst!(stable::rust_merge_policy_research_4);
+
+    #[cfg(feature = "merge_policy_research")]
+    bench_inst!(stable::rust_merge_policy_research_5);
+
     // OTHERS
 
     #[cfg(feature = "rust_ipnsort")]

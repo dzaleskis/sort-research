@@ -255,6 +255,12 @@ def build_implementation_meta_info():
         "rust_pivot_research_3_unstable": (palette[3], "square"),
         "rust_pivot_research_4_unstable": (palette[4], "square"),
 
+        "rust_merge_policy_research_1_stable": (palette[1], "circle"),
+        "rust_merge_policy_research_2_stable": (palette[2], "circle"),
+        "rust_merge_policy_research_3_stable": (palette[3], "circle"),
+        "rust_merge_policy_research_4_stable": (palette[4], "circle"),
+        "rust_merge_policy_research_5_stable": (palette[5], "circle"),
+
         "cpp_ips4o_unstable": (palette[6], "square"),
         "cpp_blockquicksort": (palette[7], "square"),
         "rust_tinyheapsort_unstable": (palette[7], "square"),
