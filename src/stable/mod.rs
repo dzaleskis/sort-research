@@ -36,7 +36,11 @@ pub mod cpp_powersort;
 
 // Call timsort sort via FFI.
 #[cfg(feature = "cpp_timsort")]
-pub mod cpp_timsort;
+pub mod cpp_timsort_og;
+
+// Call timsort sort via FFI.
+#[cfg(feature = "cpp_timsort")]
+pub mod cpp_timsort_cross;
 
 // Call powersort_4way sort via FFI.
 #[cfg(feature = "cpp_powersort")]
@@ -74,3 +78,19 @@ pub mod rust_merge_policy_research_4;
 // timsort with 2-merge merge policy
 #[cfg(feature = "merge_policy_research")]
 pub mod rust_merge_policy_research_5;
+
+// timsort with branchy merge routine (from sort evolution)
+#[cfg(feature = "merge_routine_research")]
+pub mod rust_merge_routine_research_1;
+
+// timsort with basic branchless merge routine (original)
+#[cfg(feature = "merge_routine_research")]
+pub mod rust_merge_routine_research_2;
+
+// timsort with bidirectional branchless merge routine (from glidesort?)
+#[cfg(feature = "merge_routine_research")]
+pub mod rust_merge_routine_research_3;
+
+// timsort with cross merge routine (from quadsort?)
+#[cfg(feature = "merge_routine_research")]
+pub mod rust_merge_routine_research_4;

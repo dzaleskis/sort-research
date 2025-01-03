@@ -225,7 +225,8 @@ def build_implementation_meta_info():
         "rust_glidesort_stable": (palette[3], "triangle"),
         "rust_ipn_stable": (palette[7], "square"),
         "cpp_std_libcxx_stable": (palette[4], "square"),
-        "cpp_timsort_stable": (palette[5], "square"),
+        "cpp_timsort_stable_og": (palette[5], "square"),
+        "cpp_timsort_stable_cross": (palette[6], "square"),
         "cpp_powersort_stable": (palette[6], "square"),
         "cpp_powersort_4way_stable": (palette[7], "square"),
         "rust_wpwoodjr_stable": (palette[7], "square"),
@@ -260,6 +261,11 @@ def build_implementation_meta_info():
         "rust_merge_policy_research_3_stable": (palette[3], "circle"),
         "rust_merge_policy_research_4_stable": (palette[4], "circle"),
         "rust_merge_policy_research_5_stable": (palette[5], "circle"),
+
+        "rust_merge_routine_research_1_stable": (palette[1], "circle"),
+        "rust_merge_routine_research_2_stable": (palette[2], "circle"),
+        "rust_merge_routine_research_3_stable": (palette[3], "circle"),
+        "rust_merge_routine_research_4_stable": (palette[4], "circle"),
 
         "cpp_ips4o_unstable": (palette[6], "square"),
         "cpp_blockquicksort": (palette[7], "square"),

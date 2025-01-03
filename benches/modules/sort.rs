@@ -203,6 +203,20 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     #[cfg(feature = "merge_policy_research")]
     bench_inst!(stable::rust_merge_policy_research_5);
 
+    // MERGE ROUTINES
+
+    #[cfg(feature = "merge_routine_research")]
+    bench_inst!(stable::rust_merge_routine_research_1);
+
+    #[cfg(feature = "merge_routine_research")]
+    bench_inst!(stable::rust_merge_routine_research_2);
+
+    #[cfg(feature = "merge_routine_research")]
+    bench_inst!(stable::rust_merge_routine_research_3);
+
+    #[cfg(feature = "merge_routine_research")]
+    bench_inst!(stable::rust_merge_routine_research_4);
+
     // OTHERS
 
     #[cfg(feature = "rust_ipnsort")]
@@ -230,7 +244,10 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     bench_inst!(unstable::cpp_pdqsort);
 
     #[cfg(feature = "cpp_timsort")]
-    bench_inst!(stable::cpp_timsort);
+    bench_inst!(stable::cpp_timsort_og);
+
+    #[cfg(feature = "cpp_timsort")]
+    bench_inst!(stable::cpp_timsort_cross);
 
     #[cfg(feature = "cpp_ips4o")]
     bench_inst!(unstable::cpp_ips4o);

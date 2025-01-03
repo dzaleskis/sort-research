@@ -70,7 +70,8 @@ fn build_and_link_cpp_pdqsort() {}
 
 #[cfg(feature = "cpp_timsort")]
 fn build_and_link_cpp_timsort() {
-    build_and_link_cpp_sort("cpp_timsort", None);
+    build_and_link_cpp_sort("cpp_timsort_og", None);
+    build_and_link_cpp_sort("cpp_timsort_cross", None);
 }
 
 #[cfg(not(feature = "cpp_timsort"))]

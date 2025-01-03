@@ -1,4 +1,4 @@
-#include "thirdparty/timsort-cpp/include/tim/timsort.h"
+#include "thirdparty/timsort-cpp-og/include/tim/timsort.h"
 
 #include <compare>
 #include <stdexcept>
@@ -22,11 +22,11 @@ uint32_t sort_by_impl(T* data, size_t len, F cmp_fn, uint8_t* ctx) noexcept {
 extern "C" {
 // --- i32 ---
 
-void timsort_stable_i32(int32_t* data, size_t len) {
+void timsort_stable_og_i32(int32_t* data, size_t len) {
     tim::timsort(data, data + len);
 }
 
-uint32_t timsort_stable_i32_by(int32_t* data,
+uint32_t timsort_stable_og_i32_by(int32_t* data,
                                  size_t len,
                                  CompResult (*cmp_fn)(const int32_t&,
                                                       const int32_t&,
@@ -38,11 +38,11 @@ uint32_t timsort_stable_i32_by(int32_t* data,
 
 // --- u64 ---
 
-void timsort_stable_u64(uint64_t* data, size_t len) {
+void timsort_stable_og_u64(uint64_t* data, size_t len) {
   tim::timsort(data, data + len);
 }
 
-uint32_t timsort_stable_u64_by(uint64_t* data,
+uint32_t timsort_stable_og_u64_by(uint64_t* data,
                                  size_t len,
                                  CompResult (*cmp_fn)(const uint64_t&,
                                                       const uint64_t&,
@@ -54,11 +54,11 @@ uint32_t timsort_stable_u64_by(uint64_t* data,
 
 // --- ffi_string ---
 
-void timsort_stable_ffi_string(FFIString* data, size_t len) {
+void timsort_stable_og_ffi_string(FFIString* data, size_t len) {
     printf("Not supported\n");
 }
 
-uint32_t timsort_stable_ffi_string_by(FFIString* data,
+uint32_t timsort_stable_og_ffi_string_by(FFIString* data,
                                         size_t len,
                                         CompResult (*cmp_fn)(const FFIString&,
                                                              const FFIString&,
@@ -70,11 +70,11 @@ uint32_t timsort_stable_ffi_string_by(FFIString* data,
 
 // --- f128 ---
 
-void timsort_stable_f128(F128* data, size_t len) {
+void timsort_stable_og_f128(F128* data, size_t len) {
     printf("Not supported\n");
 }
 
-uint32_t timsort_stable_f128_by(F128* data,
+uint32_t timsort_stable_og_f128_by(F128* data,
                                   size_t len,
                                   CompResult (*cmp_fn)(const F128&,
                                                        const F128&,
@@ -86,11 +86,11 @@ uint32_t timsort_stable_f128_by(F128* data,
 
 // --- 1k ---
 
-void timsort_stable_1k(FFIOneKibiByte* data, size_t len) {
+void timsort_stable_og_1k(FFIOneKibiByte* data, size_t len) {
     printf("Not supported\n");
 }
 
-uint32_t timsort_stable_1k_by(FFIOneKibiByte* data,
+uint32_t timsort_stable_og_1k_by(FFIOneKibiByte* data,
                                 size_t len,
                                 CompResult (*cmp_fn)(const FFIOneKibiByte&,
                                                      const FFIOneKibiByte&,
