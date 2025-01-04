@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-sort_impl!("rust_pivot_research_4_unstable");
+sort_impl!("pivot_recursive_median_3");
 
 pub fn sort<T: Ord>(data: &mut [T]) {
     pivot_research_4::sort(data);

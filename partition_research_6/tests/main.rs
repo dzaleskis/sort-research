@@ -4,7 +4,7 @@ struct SortImpl {}
 
 impl Sort for SortImpl {
     fn name() -> String {
-        "rust_partition_research_6_unstable".into()
+        "partition_lomuto_branchless_block".into()
     }
 
     fn sort<T>(arr: &mut [T])

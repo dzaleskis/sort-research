@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-sort_impl!("rust_partition_research_4_unstable");
+sort_impl!("partition_lomuto_branchy");
 
 pub fn sort<T: Ord>(data: &mut [T]) {
     partition_research_4::sort(data);
