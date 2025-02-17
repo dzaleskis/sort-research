@@ -92,12 +92,12 @@ default = [
     # "bench_type_f64_total",
 
     # "partition_research",
-    "pivot_research",
+    # "pivot_research",
     # "merge_policy_research",
     # "merge_routine_research",
     # "rust_ipnsort",
     # ALREADY INCLUDES DRIFTSORT AND IPNSORT
-    # "rust_std_sys",
+    "rust_std_sys",
     # "cpp_std_sys",
     # "cpp_std_libcxx",
     # "cpp_std_gcc4_3",
@@ -110,7 +110,7 @@ default = [
     # DOES NOT WORK ON M1
     # "cpp_intel_avx512",
     # # DOES NOT WORK, NEEDS TBB LIB
-    # "cpp_ips4o",
+    "cpp_ips4o",
     # "cpp_blockquicksort",
     # "cpp_gerbens_qsort",
     # "cpp_nanosort",

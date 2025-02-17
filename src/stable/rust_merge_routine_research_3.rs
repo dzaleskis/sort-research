@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::mem::{self, size_of};
 use std::ptr;
 
-sort_impl!("rust_merge_routine_research_3_stable");
+sort_impl!("merge_routine_bidirectional");
 
 /// Sorts the slice.
 ///

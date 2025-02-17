@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::mem::{self, size_of};
 use std::ptr;
 
-sort_impl!("rust_merge_policy_research_3_stable");
+sort_impl!("merge_policy_shivers_adaptive");
 
 /// Sorts the slice.
 ///
