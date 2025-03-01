@@ -676,7 +676,7 @@ where
 {
     assert!(v.len() == 32 && T::is_copy());
 
-    let mut swap = mem::MaybeUninit::<[T; 32]>::uninit();
+    let mut swap = mem::MaybeUninit::<[T; 64]>::uninit();
     let arr_ptr = v.as_mut_ptr();
     let swap_ptr = swap.as_mut_ptr() as *mut T;
 
@@ -684,19 +684,27 @@ where
     // Should is_less panic v was not modified in parity_merge and retains it's original input.
     // swap and v must not alias and swap has v.len() space.
     unsafe {
-        sort8_stable(arr_ptr, arr_ptr, swap_ptr, is_less);
-        sort8_stable(arr_ptr.add(8), arr_ptr.add(8), swap_ptr.add(8), is_less);
-        parity_merge(&v[0..16], swap_ptr, is_less);
+        sort8_stable(arr_ptr.add(0), swap_ptr.add(0), swap_ptr.add(32), is_less);
+        sort8_stable(arr_ptr.add(8), swap_ptr.add(8), swap_ptr.add(40), is_less);
+        parity_merge(
+            &*ptr::slice_from_raw_parts(swap_ptr, 16),
+            swap_ptr.add(32),
+            is_less,
+        );
 
-        sort8_stable(arr_ptr.add(16), arr_ptr.add(16), swap_ptr.add(16), is_less);
-        sort8_stable(arr_ptr.add(24), arr_ptr.add(24), swap_ptr.add(24), is_less);
-        parity_merge(&v[16..32], swap_ptr.add(16), is_less);
+        sort8_stable(arr_ptr.add(16), swap_ptr.add(16), swap_ptr.add(48), is_less);
+        sort8_stable(arr_ptr.add(24), swap_ptr.add(24), swap_ptr.add(56), is_less);
+        parity_merge(
+            &*ptr::slice_from_raw_parts(swap_ptr.add(16), 16),
+            swap_ptr.add(48),
+            is_less,
+        );
 
         // It's slightly faster to merge directly into v and copy over the 'safe' elements of swap
         // into v only if there was a panic.
         // SAFETY: see comment in `CopyOnDrop::drop`.
         let drop_guard = CopyOnDrop {
-            src: swap_ptr,
+            src: swap_ptr.add(32),
             dst: arr_ptr,
             len: 32,
         };
