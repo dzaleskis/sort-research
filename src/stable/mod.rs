@@ -9,8 +9,8 @@ pub mod rust_wpwoodjr;
 #[cfg(feature = "rust_glidesort")]
 pub mod rust_glidesort;
 
-// #[cfg(feature = "rust_driftsort")]
-// pub mod rust_driftsort;
+#[cfg(feature = "rust_driftsort")]
+pub mod rust_driftsort;
 
 #[cfg(feature = "rust_tinysort")]
 pub mod rust_tinysort;
@@ -94,3 +94,12 @@ pub mod rust_merge_routine_research_3;
 // timsort with cross merge routine (from quadsort?)
 #[cfg(feature = "merge_routine_research")]
 pub mod rust_merge_routine_research_4;
+
+#[cfg(feature = "stable_smallsort_research")]
+pub mod rust_stable_smallsort_research_1;
+
+#[cfg(feature = "stable_smallsort_research")]
+pub mod rust_stable_smallsort_research_2;
+
+#[cfg(feature = "stable_smallsort_research")]
+pub mod rust_stable_smallsort_research_3;

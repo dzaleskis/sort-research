@@ -267,6 +267,9 @@ def build_implementation_meta_info():
         "merge_routine_bidirectional": (palette[3], "circle"),
         "merge_routine_cross": (palette[4], "circle"),
 
+        "stable_smallsort_insertion": (palette[1], "circle"),
+        "stable_smallsort_network": (palette[2], "circle"),
+
         "cpp_ips4o_unstable": (palette[6], "square"),
         "cpp_blockquicksort": (palette[7], "square"),
         "rust_tinyheapsort_unstable": (palette[7], "square"),
@@ -277,6 +280,8 @@ def build_implementation_meta_info():
         "cpp_vqsort": (palette[6], "square"),
         "cpp_intel_avx512": (palette[7], "square"),
         "singeli_singelisort": (palette[3], "square"),
+        "cpp_gerbens_qsort_unstable": (palette[3], "square"),
+        "cpp_nanosort_unstable": (palette[5], "square"),
         # For partition bench
         "hoare_branchy": (palette[1], "diamond"),
         "hoare_block": (palette[4], "plus"),

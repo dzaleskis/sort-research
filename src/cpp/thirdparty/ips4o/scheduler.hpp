@@ -40,9 +40,10 @@
 #include <cassert>
 #include <cstddef>
 #include <numeric>
+#include <queue>
 #include <vector>
 
-#include <tbb/concurrent_queue.h>
+// #include <tbb/concurrent_queue.h>
 
 namespace ips4o {
 namespace detail {
@@ -161,7 +162,7 @@ class Scheduler {
     void reset() { m_num_idle_threads.store(0, std::memory_order_relaxed); }
 
  protected:
-    tbb::concurrent_queue<Job> m_glob_queue;
+    std::queue<Job> m_glob_queue;
     std::atomic_uint64_t m_num_idle_threads;
     const size_t m_num_threads;
 };

@@ -41,7 +41,7 @@ pivot_research_1 = { path = "pivot_research_1", default-features = false }
 pivot_research_2 = { path = "pivot_research_2", default-features = false }
 pivot_research_3 = { path = "pivot_research_3", default-features = false }
 pivot_research_4 = { path = "pivot_research_4", default-features = false }
-# driftsort = { path = "../driftsort", optional = true }
+driftsort = { path = "../driftsort", optional = true }
 
 [dev-dependencies]
 rand = "0.8"
@@ -95,9 +95,10 @@ default = [
     # "pivot_research",
     # "merge_policy_research",
     # "merge_routine_research",
+    "stable_smallsort_research",
     # "rust_ipnsort",
     # ALREADY INCLUDES DRIFTSORT AND IPNSORT
-    "rust_std_sys",
+    # "rust_std_sys",
     # "cpp_std_sys",
     # "cpp_std_libcxx",
     # "cpp_std_gcc4_3",
@@ -110,7 +111,7 @@ default = [
     # DOES NOT WORK ON M1
     # "cpp_intel_avx512",
     # # DOES NOT WORK, NEEDS TBB LIB
-    "cpp_ips4o",
+    # "cpp_ips4o",
     # "cpp_blockquicksort",
     # "cpp_gerbens_qsort",
     # "cpp_nanosort",
@@ -121,12 +122,12 @@ default = [
     # "singeli_singelisort",
     # "golang_std",
     # PREVIOUS RUST IMPL
-    # "rust_std_vendored",
+    "rust_std_vendored",
     # "rust_wpwoodjr",
     # "rust_radsort",
     # "rust_dmsort",
     # "rust_glidesort",
-    # "rust_driftsort",
+    "rust_driftsort",
     # "rust_crumsort_rs",
     # "rust_tinysort",
     # "rust_introsort",
@@ -145,6 +146,9 @@ merge_policy_research = []
 
 # Enable support for merge routine research prototypes.
 merge_routine_research = []
+
+# Enable support for stable small sort research prototypes.
+stable_smallsort_research = []
 
 # Enable support for ipnsort.
 rust_ipnsort = []
@@ -248,7 +252,7 @@ rust_dmsort = ["dmsort"]
 rust_glidesort = ["glidesort"]
 
 # Enable driftsort by Orson Peters and Lukas Bergdoll.
-# rust_driftsort = ["driftsort"]
+rust_driftsort = ["driftsort"]
 
 # Enable Rust port of crumsort. Parallelized by default and not a carbon copy port. There are
 # substantial differences to the original crumsort.
