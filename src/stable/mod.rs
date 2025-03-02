@@ -103,3 +103,6 @@ pub mod rust_stable_smallsort_research_2;
 
 #[cfg(feature = "stable_smallsort_research")]
 pub mod rust_stable_smallsort_research_3;
+
+#[cfg(feature = "stable_smallsort_research")]
+pub mod rust_stable_smallsort_research_4;

@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::mem::{self, size_of};
 use std::ptr;
 
-sort_impl!("stable_smallsort_block");
+sort_impl!("stable_smallsort_cond_block");
 
 /// Sorts the slice.
 ///
@@ -459,6 +459,75 @@ where
     }
 }
 
+/// Inserts `v[v.len() - 1]` into pre-sorted sequence `v[..v.len() - 1]` so that whole `v[..]`
+/// becomes sorted.
+unsafe fn insert_tail<T, F>(v: &mut [T], is_less: &mut F)
+where
+    F: FnMut(&T, &T) -> bool,
+{
+    debug_assert!(v.len() >= 2);
+
+    let arr_ptr = v.as_mut_ptr();
+    let i = v.len() - 1;
+
+    // SAFETY: caller must ensure v is at least len 2.
+    unsafe {
+        // See insert_head which talks about why this approach is beneficial.
+        let i_ptr = arr_ptr.add(i);
+
+        // It's important that we use i_ptr here. If this check is positive and we continue,
+        // We want to make sure that no other copy of the value was seen by is_less.
+        // Otherwise we would have to copy it back.
+        if is_less(&*i_ptr, &*i_ptr.sub(1)) {
+            // It's important, that we use tmp for comparison from now on. As it is the value that
+            // will be copied back. And notionally we could have created a divergence if we copy
+            // back the wrong value.
+            let tmp = mem::ManuallyDrop::new(ptr::read(i_ptr));
+            // Intermediate state of the insertion process is always tracked by `hole`, which
+            // serves two purposes:
+            // 1. Protects integrity of `v` from panics in `is_less`.
+            // 2. Fills the remaining hole in `v` in the end.
+            //
+            // Panic safety:
+            //
+            // If `is_less` panics at any point during the process, `hole` will get dropped and
+            // fill the hole in `v` with `tmp`, thus ensuring that `v` still holds every object it
+            // initially held exactly once.
+            let mut hole = InsertionHole {
+                src: &*tmp,
+                dest: i_ptr.sub(1),
+            };
+            ptr::copy_nonoverlapping(hole.dest, i_ptr, 1);
+
+            // SAFETY: We know i is at least 1.
+            for j in (0..(i - 1)).rev() {
+                let j_ptr = arr_ptr.add(j);
+                if !is_less(&*tmp, &*j_ptr) {
+                    break;
+                }
+
+                ptr::copy_nonoverlapping(j_ptr, hole.dest, 1);
+                hole.dest = j_ptr;
+            }
+            // `hole` gets dropped and thus copies `tmp` into the remaining hole in `v`.
+        }
+    }
+
+    // When dropped, copies from `src` into `dest`.
+    struct InsertionHole<T> {
+        src: *const T,
+        dest: *mut T,
+    }
+
+    impl<T> Drop for InsertionHole<T> {
+        fn drop(&mut self) {
+            unsafe {
+                ptr::copy_nonoverlapping(self.src, self.dest, 1);
+            }
+        }
+    }
+}
+
 trait IsCopyMarker {}
 
 impl<T: Copy> IsCopyMarker for T {}
@@ -689,6 +758,35 @@ pub unsafe fn sort4_stable<T, F: FnMut(&T, &T) -> bool>(
     }
 }
 
+// --- Branchless sorting (less branches not zero) ---
+
+/// Swap two values in array pointed to by a_ptr and b_ptr if b is less than a.
+#[inline]
+unsafe fn branchless_swap<T>(a_ptr: *mut T, b_ptr: *mut T, should_swap: bool) {
+    // This is a branchless version of swap if.
+    // The equivalent code with a branch would be:
+    //
+    // if should_swap {
+    //     ptr::swap_nonoverlapping(a_ptr, b_ptr, 1);
+    // }
+
+    // Give ourselves some scratch space to work with.
+    // We do not have to worry about drops: `MaybeUninit` does nothing when dropped.
+    let mut tmp = mem::MaybeUninit::<T>::uninit();
+
+    // The goal is to generate cmov instructions here.
+    let a_swap_ptr = if should_swap { b_ptr } else { a_ptr };
+    let b_swap_ptr = if should_swap { a_ptr } else { b_ptr };
+
+    // SAFETY: the caller must guarantee that `a_ptr` and `b_ptr` are valid for writes
+    // and properly aligned, and part of the same allocation, and do not alias.
+    unsafe {
+        ptr::copy_nonoverlapping(b_swap_ptr, tmp.as_mut_ptr(), 1);
+        ptr::copy(a_swap_ptr, a_ptr, 1);
+        ptr::copy_nonoverlapping(tmp.as_ptr(), b_ptr, 1);
+    }
+}
+
 /// SAFETY: The caller MUST guarantee that `v_base` is valid for 8 reads and
 /// writes, `scratch_base` and `dst` MUST be valid for 8 writes. The result will
 /// be stored in `dst[0..8]`.
@@ -697,10 +795,43 @@ unsafe fn sort8_stable<T, F: FnMut(&T, &T) -> bool>(
     scratch_base: *mut T,
     is_less: &mut F,
 ) {
-    // SAFETY: these pointers are all in-bounds by the precondition of our function.
-    sort4_stable(v_base, scratch_base, is_less);
-    sort4_stable(v_base.add(4), scratch_base.add(4), is_less);
+    let v1 = is_less(&*v_base.add(1), &*v_base.add(0));
+    let v2 = is_less(&*v_base.add(3), &*v_base.add(2));
+    let v3 = is_less(&*v_base.add(5), &*v_base.add(4));
+    let v4 = is_less(&*v_base.add(7), &*v_base.add(6));
+    let unordered_pair_count = v1 as usize + v2 as usize + v3 as usize + v4 as usize;
 
+    if unordered_pair_count == 0 {
+        // all pairs ok, check if whole input is already in order
+        let x1 = is_less(&*v_base.add(1), &*v_base.add(2));
+        let x2 = is_less(&*v_base.add(3), &*v_base.add(4));
+        let x3 = is_less(&*v_base.add(5), &*v_base.add(6));
+        let ordered_pairwise_count = x1 as usize + x2 as usize + x3 as usize;
+
+        if ordered_pairwise_count == 3 {
+            return;
+        }
+    } else {
+        // some pairs not sorted, sort them
+        branchless_swap(v_base.add(0), v_base.add(1), v1);
+        branchless_swap(v_base.add(2), v_base.add(3), v2);
+        branchless_swap(v_base.add(4), v_base.add(5), v3);
+        branchless_swap(v_base.add(6), v_base.add(7), v4);
+    }
+
+    // merge v[0..2] with v[2..4]
+    parity_merge(
+        &*ptr::slice_from_raw_parts(v_base, 4),
+        scratch_base,
+        is_less,
+    );
+    // merge v[4..6] with v[6..8]
+    parity_merge(
+        &*ptr::slice_from_raw_parts(v_base.add(4), 4),
+        scratch_base.add(4),
+        is_less,
+    );
+    // merge v[0..4] with v[4..8]
     guarded_parity_merge(scratch_base, v_base, 8, is_less);
 }
 
