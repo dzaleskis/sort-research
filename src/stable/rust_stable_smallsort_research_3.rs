@@ -684,12 +684,12 @@ where
     // Should is_less panic v was not modified in parity_merge and retains it's original input.
     // swap and v must not alias and swap has v.len() space.
     unsafe {
-        sort8_stable(arr_ptr.add(0), arr_ptr.add(0), swap_ptr.add(0), is_less);
-        sort8_stable(arr_ptr.add(8), arr_ptr.add(8), swap_ptr.add(8), is_less);
+        sort8_stable(arr_ptr.add(0), swap_ptr.add(0), is_less);
+        sort8_stable(arr_ptr.add(8), swap_ptr.add(8), is_less);
         parity_merge(&mut v[0..16], swap_ptr.add(0), is_less);
 
-        sort8_stable(arr_ptr.add(16), arr_ptr.add(16), swap_ptr.add(16), is_less);
-        sort8_stable(arr_ptr.add(24), arr_ptr.add(24), swap_ptr.add(24), is_less);
+        sort8_stable(arr_ptr.add(16), swap_ptr.add(16), is_less);
+        sort8_stable(arr_ptr.add(24), swap_ptr.add(24), is_less);
         parity_merge(&mut v[16..32], swap_ptr.add(16), is_less);
 
         // It's slightly faster to merge directly into v and copy over the 'safe' elements of swap
@@ -774,7 +774,6 @@ pub unsafe fn sort4_stable<T, F: FnMut(&T, &T) -> bool>(
 /// be stored in `dst[0..8]`.
 unsafe fn sort8_stable<T, F: FnMut(&T, &T) -> bool>(
     v_base: *mut T,
-    dst: *mut T,
     scratch_base: *mut T,
     is_less: &mut F,
 ) {
@@ -784,7 +783,7 @@ unsafe fn sort8_stable<T, F: FnMut(&T, &T) -> bool>(
 
     let drop_guard = CopyOnDrop {
         src: scratch_base,
-        dst,
+        dst: v_base,
         len: 8,
     };
 
