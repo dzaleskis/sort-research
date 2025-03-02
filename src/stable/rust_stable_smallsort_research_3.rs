@@ -676,7 +676,7 @@ where
 {
     assert!(v.len() == 32 && T::is_copy());
 
-    let mut swap = mem::MaybeUninit::<[T; 64]>::uninit();
+    let mut swap = mem::MaybeUninit::<[T; 32]>::uninit();
     let arr_ptr = v.as_mut_ptr();
     let swap_ptr = swap.as_mut_ptr() as *mut T;
 
@@ -684,27 +684,19 @@ where
     // Should is_less panic v was not modified in parity_merge and retains it's original input.
     // swap and v must not alias and swap has v.len() space.
     unsafe {
-        sort8_stable(arr_ptr.add(0), swap_ptr.add(0), swap_ptr.add(32), is_less);
-        sort8_stable(arr_ptr.add(8), swap_ptr.add(8), swap_ptr.add(40), is_less);
-        parity_merge(
-            &*ptr::slice_from_raw_parts(swap_ptr, 16),
-            swap_ptr.add(32),
-            is_less,
-        );
+        sort8_stable(arr_ptr.add(0), arr_ptr.add(0), swap_ptr.add(0), is_less);
+        sort8_stable(arr_ptr.add(8), arr_ptr.add(8), swap_ptr.add(8), is_less);
+        parity_merge(&mut v[0..16], swap_ptr.add(0), is_less);
 
-        sort8_stable(arr_ptr.add(16), swap_ptr.add(16), swap_ptr.add(48), is_less);
-        sort8_stable(arr_ptr.add(24), swap_ptr.add(24), swap_ptr.add(56), is_less);
-        parity_merge(
-            &*ptr::slice_from_raw_parts(swap_ptr.add(16), 16),
-            swap_ptr.add(48),
-            is_less,
-        );
+        sort8_stable(arr_ptr.add(16), arr_ptr.add(16), swap_ptr.add(16), is_less);
+        sort8_stable(arr_ptr.add(24), arr_ptr.add(24), swap_ptr.add(24), is_less);
+        parity_merge(&mut v[16..32], swap_ptr.add(16), is_less);
 
         // It's slightly faster to merge directly into v and copy over the 'safe' elements of swap
         // into v only if there was a panic.
         // SAFETY: see comment in `CopyOnDrop::drop`.
         let drop_guard = CopyOnDrop {
-            src: swap_ptr.add(32),
+            src: swap_ptr,
             dst: arr_ptr,
             len: 32,
         };
@@ -715,22 +707,6 @@ where
             is_less,
         );
         mem::forget(drop_guard);
-    }
-
-    struct CopyOnDrop<T> {
-        src: *const T,
-        dst: *mut T,
-        len: usize,
-    }
-
-    impl<T> Drop for CopyOnDrop<T> {
-        fn drop(&mut self) {
-            // SAFETY: `src` must contain `len` initialized elements, and dst must
-            // be valid to write `len` elements.
-            unsafe {
-                ptr::copy_nonoverlapping(self.src, self.dst, self.len);
-            }
-        }
     }
 }
 
@@ -803,14 +779,35 @@ unsafe fn sort8_stable<T, F: FnMut(&T, &T) -> bool>(
     is_less: &mut F,
 ) {
     // SAFETY: these pointers are all in-bounds by the precondition of our function.
-    unsafe {
-        sort4_stable(v_base, scratch_base, is_less);
-        sort4_stable(v_base.add(4), scratch_base.add(4), is_less);
-    }
+    sort4_stable(v_base, scratch_base, is_less);
+    sort4_stable(v_base.add(4), scratch_base.add(4), is_less);
 
-    // SAFETY: scratch_base[0..8] is now initialized, allowing us to merge back
-    // into dst.
-    unsafe {
-        parity_merge(&*ptr::slice_from_raw_parts(scratch_base, 8), dst, is_less);
+    let drop_guard = CopyOnDrop {
+        src: scratch_base,
+        dst,
+        len: 8,
+    };
+
+    parity_merge(
+        &*ptr::slice_from_raw_parts(drop_guard.src, drop_guard.len),
+        drop_guard.dst,
+        is_less,
+    );
+    mem::forget(drop_guard);
+}
+
+struct CopyOnDrop<T> {
+    src: *const T,
+    dst: *mut T,
+    len: usize,
+}
+
+impl<T> Drop for CopyOnDrop<T> {
+    fn drop(&mut self) {
+        // SAFETY: `src` must contain `len` initialized elements, and dst must
+        // be valid to write `len` elements.
+        unsafe {
+            ptr::copy_nonoverlapping(self.src, self.dst, self.len);
+        }
     }
 }
