@@ -112,7 +112,16 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     bench_inst!(stable::rust_std_vendored);
 
     #[cfg(feature = "stable_smallsort_research")]
+    bench_inst!(stable::rust_stable_smallsort_research_1);
+
+    #[cfg(feature = "stable_smallsort_research")]
     bench_inst!(stable::rust_stable_smallsort_research_2);
+
+    #[cfg(feature = "stable_smallsort_research")]
+    bench_inst!(stable::rust_stable_smallsort_research_3);
+
+    #[cfg(feature = "stable_smallsort_research")]
+    bench_inst!(stable::rust_stable_smallsort_research_4);
 
     #[cfg(feature = "cpp_std_sys")]
     bench_inst!(stable::cpp_std_sys);

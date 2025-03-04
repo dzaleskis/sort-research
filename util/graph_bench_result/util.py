@@ -269,6 +269,8 @@ def build_implementation_meta_info():
 
         "stable_smallsort_insertion": (palette[1], "circle"),
         "stable_smallsort_network": (palette[2], "circle"),
+        "stable_smallsort_block": (palette[2], "circle"),
+        "stable_smallsort_cond_block": (palette[2], "circle"),
 
         "cpp_ips4o_unstable": (palette[6], "square"),
         "cpp_blockquicksort": (palette[7], "square"),

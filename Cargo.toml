@@ -127,7 +127,7 @@ default = [
     # "rust_radsort",
     # "rust_dmsort",
     # "rust_glidesort",
-    "rust_driftsort",
+    # "rust_driftsort",
     # "rust_crumsort_rs",
     # "rust_tinysort",
     # "rust_introsort",
