@@ -42,6 +42,14 @@ pub mod rust_pivot_research_4;
 #[cfg(feature = "unstable_smallsort_research")]
 pub mod rust_unstable_smallsort_research_1;
 
+// sorting network
+#[cfg(feature = "unstable_smallsort_research")]
+pub mod rust_unstable_smallsort_research_2;
+
+// block sort
+#[cfg(feature = "unstable_smallsort_research")]
+pub mod rust_unstable_smallsort_research_3;
+
 #[cfg(feature = "rust_std_vendored")]
 pub mod rust_std_vendored;
 

@@ -351,30 +351,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b410bbe7e14ab526a0e86877eb47c6996a2bd7746f027ba551028c925390e4e9"
 
 [[package]]
-name = "partition_research_1"
-version = "0.1.0"
-
-[[package]]
-name = "partition_research_2"
-version = "0.1.0"
-
-[[package]]
-name = "partition_research_3"
-version = "0.1.0"
-
-[[package]]
-name = "partition_research_4"
-version = "0.1.0"
-
-[[package]]
-name = "partition_research_5"
-version = "0.1.0"
-
-[[package]]
-name = "partition_research_6"
-version = "0.1.0"
-
-[[package]]
 name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -615,12 +591,6 @@ dependencies = [
  "introsort",
  "ipnsort",
  "once_cell",
- "partition_research_1",
- "partition_research_2",
- "partition_research_3",
- "partition_research_4",
- "partition_research_5",
- "partition_research_6",
  "paste",
  "pivot_research_1",
  "pivot_research_2",

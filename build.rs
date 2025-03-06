@@ -1,5 +1,4 @@
 use std::env;
-use std::path::Path;
 use std::path::PathBuf;
 
 // Adjust this if you have a custom clang build, or path.
