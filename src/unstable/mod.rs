@@ -2,29 +2,25 @@ pub mod rust_ipnsort;
 
 pub mod rust_std;
 
-// basic hoare
+// hoare with cyclic permut
 #[cfg(feature = "partition_research")]
 pub mod rust_partition_research_1;
 
-// hoare with cyclic permut
+// hoare with block branchless and cyclic permut
 #[cfg(feature = "partition_research")]
 pub mod rust_partition_research_2;
 
-// hoare with block branchless and cyclic permut
+// basic lomuto
 #[cfg(feature = "partition_research")]
 pub mod rust_partition_research_3;
 
-// basic lomuto
+// branchless lomuto with cyclic permut
 #[cfg(feature = "partition_research")]
 pub mod rust_partition_research_4;
 
-// branchless lomuto with cyclic permut
-#[cfg(feature = "partition_research")]
-pub mod rust_partition_research_5;
-
 // block-based branchless lomuto
 #[cfg(feature = "partition_research")]
-pub mod rust_partition_research_6;
+pub mod rust_partition_research_5;
 
 // median of 3
 #[cfg(feature = "pivot_research")]
@@ -41,6 +37,10 @@ pub mod rust_pivot_research_3;
 // adaptive recursive ninther
 #[cfg(feature = "pivot_research")]
 pub mod rust_pivot_research_4;
+
+// insertion sort
+#[cfg(feature = "unstable_smallsort_research")]
+pub mod rust_unstable_smallsort_research_1;
 
 #[cfg(feature = "rust_std_vendored")]
 pub mod rust_std_vendored;
