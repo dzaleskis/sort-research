@@ -69,23 +69,23 @@ pub mod rust_merge_policy_research_2;
 
 // timsort with powersort merge policy
 #[cfg(feature = "merge_policy_research")]
-pub mod rust_merge_policy_research_4;
+pub mod rust_merge_policy_research_3;
 
 // timsort with 2-merge merge policy
 #[cfg(feature = "merge_policy_research")]
-pub mod rust_merge_policy_research_5;
+pub mod rust_merge_policy_research_4;
 
 // timsort with basic branchless merge routine (original)
 #[cfg(feature = "merge_routine_research")]
-pub mod rust_merge_routine_research_2;
+pub mod rust_merge_routine_research_1;
 
 // timsort with bidirectional branchless merge routine (from glidesort?)
 #[cfg(feature = "merge_routine_research")]
-pub mod rust_merge_routine_research_3;
+pub mod rust_merge_routine_research_2;
 
 // timsort with cross merge routine (from quadsort?)
 #[cfg(feature = "merge_routine_research")]
-pub mod rust_merge_routine_research_4;
+pub mod rust_merge_routine_research_3;
 
 #[cfg(feature = "stable_smallsort_research")]
 pub mod rust_stable_smallsort_research_1;
