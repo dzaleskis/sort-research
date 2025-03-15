@@ -75,10 +75,6 @@ pub mod rust_merge_policy_research_4;
 #[cfg(feature = "merge_policy_research")]
 pub mod rust_merge_policy_research_5;
 
-// timsort with branchy merge routine (from sort evolution)
-#[cfg(feature = "merge_routine_research")]
-pub mod rust_merge_routine_research_1;
-
 // timsort with basic branchless merge routine (original)
 #[cfg(feature = "merge_routine_research")]
 pub mod rust_merge_routine_research_2;

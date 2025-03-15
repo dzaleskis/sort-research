@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::mem::{self, size_of};
 use std::ptr;
 
-sort_impl!("merge_routine_branchless");
+sort_impl!("merge_routine_bidirectional");
 
 /// Sorts the slice.
 ///
@@ -135,7 +135,8 @@ where
     // shallow copies of the contents of `v` without risking the dtors running on copies if
     // `is_less` panics. When merging two sorted runs, this buffer holds a copy of the shorter run,
     // which will always have length at most `len / 2`.
-    let mut buf = Vec::with_capacity(len / 2);
+    let mut buf = Vec::with_capacity(len);
+    let buf_ptr = buf.as_mut_ptr();
 
     // In order to identify natural runs in `v`, we traverse it backwards. That might seem like a
     // strange decision, but consider the fact that merges more often go in the opposite direction
@@ -181,13 +182,14 @@ where
         while let Some(r) = collapse(&runs) {
             let left = runs[r + 1];
             let right = runs[r];
+            let merge_slice = &mut v[left.start..right.start + right.len];
             unsafe {
-                merge(
-                    &mut v[left.start..right.start + right.len],
-                    left.len,
-                    buf.as_mut_ptr(),
-                    &mut is_less,
-                );
+                if qualifies_for_parity_merge::<T>() {
+                    parity_merge_plus(merge_slice, left.len, buf_ptr, &mut is_less);
+                    ptr::copy_nonoverlapping(buf_ptr, merge_slice.as_mut_ptr(), merge_slice.len());
+                } else {
+                    merge(merge_slice, left.len, buf_ptr, &mut is_less);
+                }
             }
             runs[r] = Run {
                 start: left.start,
@@ -429,5 +431,223 @@ where
                 ptr::copy_nonoverlapping(self.start, self.dest, len);
             }
         }
+    }
+}
+
+trait IsCopyMarker {}
+
+impl<T: Copy> IsCopyMarker for T {}
+
+trait IsCopy {
+    fn is_copy() -> bool;
+}
+
+impl<T> IsCopy for T {
+    default fn is_copy() -> bool {
+        false
+    }
+}
+
+impl<T: IsCopyMarker> IsCopy for T {
+    fn is_copy() -> bool {
+        true
+    }
+}
+
+// I would like to make this a const fn.
+#[inline]
+fn qualifies_for_parity_merge<T>() -> bool {
+    // This checks two things:
+    //
+    // - Type size: Is it ok to create 40 of them on the stack.
+    //
+    // - Can the type have interior mutability, this is checked by testing if T is Copy.
+    //   If the type can have interior mutability it may alter itself during comparison in a way
+    //   that must be observed after the sort operation concludes.
+    //   Otherwise a type like Mutex<Option<Box<str>>> could lead to double free.
+
+    T::is_copy()
+
+    // let is_small = mem::size_of::<T>() <= mem::size_of::<[usize; 2]>();
+    // let is_copy = T::is_copy();
+
+    // return is_small && is_copy;
+}
+
+#[inline]
+pub unsafe fn merge_up<T, F>(
+    mut src_left: *const T,
+    mut src_right: *const T,
+    mut dest_ptr: *mut T,
+    is_less: &mut F,
+) -> (*const T, *const T, *mut T)
+where
+    F: FnMut(&T, &T) -> bool,
+{
+    // This is a branchless merge utility function.
+    // The equivalent code with a branch would be:
+    //
+    // if !is_less(&*src_right, &*src_left) {
+    //     ptr::copy_nonoverlapping(src_left, dest_ptr, 1);
+    //     src_left = src_left.wrapping_add(1);
+    // } else {
+    //     ptr::copy_nonoverlapping(src_right, dest_ptr, 1);
+    //     src_right = src_right.wrapping_add(1);
+    // }
+    // dest_ptr = dest_ptr.add(1);
+
+    let is_l = !is_less(&*src_right, &*src_left);
+    let copy_ptr = if is_l { src_left } else { src_right };
+    ptr::copy_nonoverlapping(copy_ptr, dest_ptr, 1);
+    src_right = src_right.wrapping_add(!is_l as usize);
+    src_left = src_left.wrapping_add(is_l as usize);
+    dest_ptr = dest_ptr.add(1);
+
+    (src_left, src_right, dest_ptr)
+}
+
+#[inline]
+pub unsafe fn merge_down<T, F>(
+    mut src_left: *const T,
+    mut src_right: *const T,
+    mut dest_ptr: *mut T,
+    is_less: &mut F,
+) -> (*const T, *const T, *mut T)
+where
+    F: FnMut(&T, &T) -> bool,
+{
+    // This is a branchless merge utility function.
+    // The equivalent code with a branch would be:
+    //
+    // if !is_less(&*src_right, &*src_left) {
+    //     ptr::copy_nonoverlapping(src_right, dest_ptr, 1);
+    //     src_right = src_right.wrapping_sub(1);
+    // } else {
+    //     ptr::copy_nonoverlapping(src_left, dest_ptr, 1);
+    //     src_left = src_left.wrapping_sub(1);
+    // }
+    // dest_ptr = dest_ptr.sub(1);
+
+    let is_l = !is_less(&*src_right, &*src_left);
+    let copy_ptr = if is_l { src_right } else { src_left };
+    ptr::copy_nonoverlapping(copy_ptr, dest_ptr, 1);
+    src_right = src_right.wrapping_sub(is_l as usize);
+    src_left = src_left.wrapping_sub(!is_l as usize);
+    dest_ptr = dest_ptr.sub(1);
+
+    (src_left, src_right, dest_ptr)
+}
+
+/// Merge v assuming v[..mid] and v[mid..] are already sorted.
+#[cfg_attr(feature = "no_inline_sub_functions", inline(never))]
+pub unsafe fn parity_merge_plus<T, F>(v: &[T], mid: usize, dest_ptr: *mut T, is_less: &mut F)
+where
+    F: FnMut(&T, &T) -> bool,
+{
+    // SAFETY: the caller must guarantee that `dest_ptr` is valid for v.len() writes.
+    // Also `v.as_ptr` and `dest_ptr` must not alias.
+    //
+    // The caller must guarantee that T cannot modify itself inside is_less.
+    let len = v.len();
+    let src_ptr = v.as_ptr();
+
+    assert!(mid > 0 && mid < len);
+
+    // TODO explain why this is fast.
+
+    // It helps to visualize the merge:
+    //
+    //                        mid
+    //  |left_ptr     right_ptr|
+    //  v                      v
+    // [xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]
+    //                        ^                                    ^
+    //                        |t_left_ptr               t_right_ptr|
+    //
+    // If there is no ord violation left_ptr and t_left_ptr should meet somewhere inside the
+    // left side. And right_ptr t_right_ptr somewhere in the right side.
+    // Note, left_ptr and right_ptr can only grow (move to the right) and,
+    // t_left_ptr and t_right_ptr can only shrink (move to the left).
+    //
+    // Along with each loop iteration of merge_up and merge_down ptr_data will grow by 1 and
+    // t_ptr_data shrink by 1.
+    // During the merge buffer looks like this:
+    // [xxxxxxxxxxxxxuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuxxxxxxxxxxxxx]
+    // Where x is values that have been written and u are potentially uninitialized memory.
+
+    let mut ptr_left = src_ptr;
+    let mut ptr_right = src_ptr.wrapping_add(mid);
+    let mut ptr_data = dest_ptr;
+
+    let mut t_ptr_left = src_ptr.wrapping_add(mid - 1);
+    let mut t_ptr_right = src_ptr.wrapping_add(len - 1);
+    let mut t_ptr_data = dest_ptr.wrapping_add(len - 1);
+
+    let left_side_shorter = mid < len - mid;
+    let shorter_side = if left_side_shorter { mid } else { len - mid };
+    let longer_side = len - shorter_side;
+
+    // TODO explain why this is safe even with Ord violations.
+    for _ in 0..shorter_side {
+        (ptr_left, ptr_right, ptr_data) = merge_up(ptr_left, ptr_right, ptr_data, is_less);
+        (t_ptr_left, t_ptr_right, t_ptr_data) =
+            merge_down(t_ptr_left, t_ptr_right, t_ptr_data, is_less);
+    }
+
+    let calc_ptr_diff = |ptr, base_ptr| (ptr as usize).wrapping_sub(base_ptr as usize);
+
+    if shorter_side != longer_side {
+        // TODO explain loop conditions and Ord violation overlap.
+        while ptr_left <= t_ptr_left
+            && t_ptr_left >= src_ptr
+            && ptr_right <= t_ptr_right
+            && t_ptr_right >= src_ptr
+        {
+            (ptr_left, ptr_right, ptr_data) = merge_up(ptr_left, ptr_right, ptr_data, is_less);
+            (t_ptr_left, t_ptr_right, t_ptr_data) =
+                merge_down(t_ptr_left, t_ptr_right, t_ptr_data, is_less);
+        }
+
+        let mid_ptr = src_ptr.add(mid);
+        let end_ptr = src_ptr.add(len);
+
+        let left_ptr_done = calc_ptr_diff(ptr_left, t_ptr_left) == mem::size_of::<T>();
+        let right_ptr_done = calc_ptr_diff(ptr_right, t_ptr_right) == mem::size_of::<T>();
+
+        if !left_ptr_done && !right_ptr_done {
+            panic!("Ord violation");
+        }
+
+        if !left_ptr_done {
+            // Be vigilant and check everything that could go wrong.
+            // t_ptr_left must be within the left side and larger or equal to ptr_left.
+            if !(t_ptr_data >= ptr_data && t_ptr_left < mid_ptr && t_ptr_left >= ptr_left) {
+                panic!("Ord violation");
+            }
+
+            let buf_rest_len = t_ptr_data.sub_ptr(ptr_data) + 1;
+            let copy_len = t_ptr_left.sub_ptr(ptr_left) + 1;
+            assert!(copy_len == buf_rest_len);
+            ptr::copy_nonoverlapping(ptr_left, ptr_data, copy_len);
+            ptr_left = ptr_left.add(copy_len);
+        } else if !right_ptr_done {
+            // t_ptr_right must be within the right side and larger or equal to ptr_right.
+            if !(t_ptr_data >= ptr_data && t_ptr_right < end_ptr && t_ptr_right >= ptr_right) {
+                panic!("Ord violation");
+            }
+
+            let buf_rest_len = t_ptr_data.sub_ptr(ptr_data) + 1;
+            let copy_len = t_ptr_right.sub_ptr(ptr_right) + 1;
+            assert!(copy_len == buf_rest_len);
+            ptr::copy_nonoverlapping(ptr_right, ptr_data, copy_len);
+            ptr_right = ptr_right.add(copy_len);
+        }
+    }
+
+    let left_diff = calc_ptr_diff(ptr_left, t_ptr_left);
+    let right_diff = calc_ptr_diff(ptr_right, t_ptr_right);
+
+    if !(left_diff == mem::size_of::<T>() && right_diff == mem::size_of::<T>()) {
+        panic!("Ord violation");
     }
 }

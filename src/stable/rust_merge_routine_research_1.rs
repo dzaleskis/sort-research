@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 use std::mem::{self, size_of};
 use std::ptr;
 
-sort_impl!("merge_routine_classic");
+sort_impl!("merge_routine_branchless");
 
 /// Sorts the slice.
 ///
@@ -317,20 +317,15 @@ where
 ///
 /// The two slices must be non-empty and `mid` must be in bounds. Buffer `buf` must be long enough
 /// to hold a copy of the shorter slice. Also, `T` must not be a zero-sized type.
-///
-/// Never inline this function to avoid code bloat. It still optimizes nicely and has practically no
-/// performance impact.
-#[inline(never)]
-#[cfg(not(no_global_oom_handling))]
 unsafe fn merge<T, F>(v: &mut [T], mid: usize, buf: *mut T, is_less: &mut F)
 where
     F: FnMut(&T, &T) -> bool,
 {
     let len = v.len();
-    assert!(mid > 0 && mid < len);
+    let v = v.as_mut_ptr();
 
-    let arr_ptr = v.as_mut_ptr();
-    let (v_mid, v_end) = unsafe { (arr_ptr.add(mid), arr_ptr.add(len)) };
+    // SAFETY: mid and len must be in-bounds of v.
+    let (v_mid, v_end) = unsafe { (v.add(mid), v.add(len)) };
 
     // The merge process first copies the shorter run into `buf`. Then it traces the newly copied
     // run and the longer run forwards (or backwards), comparing their next unconsumed elements and
@@ -353,12 +348,14 @@ where
 
     if mid <= len - mid {
         // The left run is shorter.
+
+        // SAFETY: buf must have enough capacity for `v[..mid]`.
         unsafe {
-            ptr::copy_nonoverlapping(arr_ptr, buf, mid);
+            ptr::copy_nonoverlapping(v, buf, mid);
             hole = MergeHole {
                 start: buf,
                 end: buf.add(mid),
-                dest: arr_ptr,
+                dest: v,
             };
         }
 
@@ -370,19 +367,21 @@ where
         while *left < hole.end && right < v_end {
             // Consume the lesser side.
             // If equal, prefer the left run to maintain stability.
+
+            // SAFETY: left and right must be valid and part of v same for out.
             unsafe {
-                if is_less(&*right, &**left) {
-                    ptr::copy_nonoverlapping(right, *out, 1);
-                    right = right.add(1);
-                } else {
-                    ptr::copy_nonoverlapping(*left, *out, 1);
-                    *left = left.add(1);
-                }
+                let is_l = is_less(&*right, &**left);
+                let to_copy = if is_l { right } else { *left };
+                ptr::copy_nonoverlapping(to_copy, *out, 1);
                 *out = out.add(1);
+                right = right.add(is_l as usize);
+                *left = left.add(!is_l as usize);
             }
         }
     } else {
         // The right run is shorter.
+
+        // SAFETY: buf must have enough capacity for `v[mid..]`.
         unsafe {
             ptr::copy_nonoverlapping(v_mid, buf, len - mid);
             hole = MergeHole {
@@ -397,22 +396,18 @@ where
         let right = &mut hole.end;
         let mut out = v_end;
 
-        while arr_ptr < *left && buf < *right {
+        while v < *left && buf < *right {
             // Consume the greater side.
             // If equal, prefer the right run to maintain stability.
 
-            // LLVM is actually pretty at turning this into cmov based code.
-            // For demonstration purposes I want this to generate a cmp + jmp.
+            // SAFETY: left and right must be valid and part of v same for out.
             unsafe {
-                if is_less(&*right.offset(-1), &*left.offset(-1)) {
-                    out = out.sub(1);
-                    *left = left.sub(1);
-                    ptr::copy_nonoverlapping(*left, out, 1);
-                } else {
-                    out = out.sub(1);
-                    *right = right.sub(1);
-                    ptr::copy_nonoverlapping(*right, out, 1);
-                }
+                let is_l = is_less(&*right.sub(1), &*left.sub(1));
+                *left = left.sub(is_l as usize);
+                *right = right.sub(!is_l as usize);
+                let to_copy = if is_l { *left } else { *right };
+                out = out.sub(1);
+                ptr::copy_nonoverlapping(to_copy, out, 1);
             }
         }
     }
@@ -428,7 +423,7 @@ where
 
     impl<T> Drop for MergeHole<T> {
         fn drop(&mut self) {
-            // `T` is not a zero-sized type, and these are pointers into a slice's elements.
+            // SAFETY: `T` is not a zero-sized type, and these are pointers into a slice's elements.
             unsafe {
                 let len = self.end.sub_ptr(self.start);
                 ptr::copy_nonoverlapping(self.start, self.dest, len);
