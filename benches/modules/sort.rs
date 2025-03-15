@@ -111,18 +111,6 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     #[cfg(feature = "rust_std_vendored")]
     bench_inst!(stable::rust_std_vendored);
 
-    #[cfg(feature = "stable_smallsort_research")]
-    bench_inst!(stable::rust_stable_smallsort_research_1);
-
-    #[cfg(feature = "stable_smallsort_research")]
-    bench_inst!(stable::rust_stable_smallsort_research_2);
-
-    #[cfg(feature = "stable_smallsort_research")]
-    bench_inst!(stable::rust_stable_smallsort_research_3);
-
-    #[cfg(feature = "stable_smallsort_research")]
-    bench_inst!(stable::rust_stable_smallsort_research_4);
-
     #[cfg(feature = "cpp_std_sys")]
     bench_inst!(stable::cpp_std_sys);
 
@@ -231,17 +219,14 @@ pub fn bench<T: Ord + std::fmt::Debug>(
 
     // STABLE SMALL SORTS
 
-    #[cfg(feature = "merge_routine_research")]
+    #[cfg(feature = "stable_smallsort_research")]
     bench_inst!(stable::rust_stable_smallsort_research_1);
 
-    #[cfg(feature = "merge_routine_research")]
+    #[cfg(feature = "stable_smallsort_research")]
     bench_inst!(stable::rust_stable_smallsort_research_2);
 
-    #[cfg(feature = "merge_routine_research")]
+    #[cfg(feature = "stable_smallsort_research")]
     bench_inst!(stable::rust_stable_smallsort_research_3);
-
-    #[cfg(feature = "merge_routine_research")]
-    bench_inst!(stable::rust_stable_smallsort_research_4);
 
     // UNSTABLE SMALL SORTS
 
@@ -253,9 +238,6 @@ pub fn bench<T: Ord + std::fmt::Debug>(
 
     #[cfg(feature = "unstable_smallsort_research")]
     bench_inst!(unstable::rust_unstable_smallsort_research_3);
-
-    #[cfg(feature = "unstable_smallsort_research")]
-    bench_inst!(unstable::rust_unstable_smallsort_research_4);
 
     // OTHERS
 
