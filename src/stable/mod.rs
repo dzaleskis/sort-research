@@ -67,10 +67,6 @@ pub mod rust_merge_policy_research_1;
 #[cfg(feature = "merge_policy_research")]
 pub mod rust_merge_policy_research_2;
 
-// timsort with length-adaptive shivers merge policy
-#[cfg(feature = "merge_policy_research")]
-pub mod rust_merge_policy_research_3;
-
 // timsort with powersort merge policy
 #[cfg(feature = "merge_policy_research")]
 pub mod rust_merge_policy_research_4;

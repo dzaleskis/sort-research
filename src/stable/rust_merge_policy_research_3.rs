@@ -1,11 +1,10 @@
 #![allow(unused_unsafe)]
 
-use std::cmp;
 use std::cmp::Ordering;
 use std::mem::{self, size_of};
 use std::ptr;
 
-sort_impl!("merge_policy_shivers_adaptive");
+sort_impl!("merge_policy_powersort");
 
 /// Sorts the slice.
 ///
@@ -142,8 +141,10 @@ where
     // strange decision, but consider the fact that merges more often go in the opposite direction
     // (forwards). According to benchmarks, merging forwards is slightly faster than merging
     // backwards. To conclude, identifying runs by traversing backwards improves performance.
-    let mut runs = vec![];
+    let mut runs: Vec<Run> = vec![];
     let mut end = len;
+    let scale_factor = merge_tree_scale_factor(len);
+
     while end > 0 {
         // Find the next natural run, and reverse it if it's strictly descending.
         let mut start = end - 1;
@@ -171,31 +172,69 @@ where
             insert_head(&mut v[start..end], &mut is_less);
         }
 
-        // Push this run onto the stack.
-        runs.push(Run {
+        let next_run = Run {
             start,
             len: end - start,
-        });
+            power: 0,
+        };
         end = start;
 
-        // Merge some pairs of adjacent runs to satisfy the invariants.
-        while let Some(r) = collapse(&runs, len) {
-            let left = runs[r + 1];
-            let right = runs[r];
-            unsafe {
-                merge(
-                    &mut v[left.start..right.start + right.len],
-                    left.len,
-                    buf.as_mut_ptr(),
-                    &mut is_less,
-                );
+        if runs.len() >= 1 {
+            let prev_run = runs.last().unwrap();
+            let power = merge_tree_depth(
+                next_run.start,
+                prev_run.start,
+                prev_run.start + prev_run.len,
+                scale_factor,
+            );
+
+            // Merge some pairs of adjacent runs to satisfy the invariants.
+            while let Some(r) = collapse(&runs, power) {
+                let left = runs[r + 1];
+                let right = runs[r];
+                unsafe {
+                    merge(
+                        &mut v[left.start..right.start + right.len],
+                        left.len,
+                        buf.as_mut_ptr(),
+                        &mut is_less,
+                    );
+                }
+                runs[r] = Run {
+                    start: left.start,
+                    len: left.len + right.len,
+                    power: 0,
+                };
+                runs.remove(r + 1);
             }
-            runs[r] = Run {
-                start: left.start,
-                len: left.len + right.len,
-            };
-            runs.remove(r + 1);
+
+            // set the power for the previous run
+            runs.last_mut().unwrap().power = power;
         }
+
+        // Push the next run onto the stack.
+        runs.push(next_run);
+    }
+
+    // Merge remaining runs
+    while runs.len() >= 2 {
+        let r = runs.len() - 2;
+        let left = runs[r + 1];
+        let right = runs[r];
+        unsafe {
+            merge(
+                &mut v[left.start..right.start + right.len],
+                left.len,
+                buf.as_mut_ptr(),
+                &mut is_less,
+            );
+        }
+        runs[r] = Run {
+            start: left.start,
+            len: left.len + right.len,
+            power: 0,
+        };
+        runs.remove(r + 1);
     }
 
     // Finally, exactly one run must remain in the stack.
@@ -216,30 +255,32 @@ where
     // run starts at index 0, it will always demand a merge operation until the stack is fully
     // collapsed, in order to complete the sort.
     #[inline]
-    fn collapse(runs: &[Run], input_len: usize) -> Option<usize> {
+    fn collapse(runs: &[Run], power: u8) -> Option<usize> {
         let n = runs.len();
         // Z = runs[n - 1], Y = runs[n - 2], X = runs[n - 3], W = runs[n - 4]
-        if n >= 2 && (runs[n - 1].start == 0) {
+        if n >= 2 && runs[n - 2].power > power {
             Some(n - 2)
-        } else if n >= 3
-            && run_l(runs[n - 3].len, input_len)
-                <= run_l(cmp::max(runs[n - 2].len, runs[n - 1].len), input_len)
-        {
-            Some(n - 3)
         } else {
             None
         }
     }
 
     #[inline]
-    fn run_l(run_len: usize, input_len: usize) -> f64 {
-        (run_len as f64 / (input_len + 1) as f64).log2().floor()
+    fn merge_tree_depth(left: usize, mid: usize, right: usize, scale_factor: u64) -> u8 {
+        let x = left as u64 + mid as u64;
+        let y = mid as u64 + right as u64;
+        ((scale_factor * x) ^ (scale_factor * y)).leading_zeros() as u8
+    }
+
+    pub fn merge_tree_scale_factor(n: usize) -> u64 {
+        ((1 << 62) + n as u64 - 1) / n as u64
     }
 
     #[derive(Clone, Copy)]
     struct Run {
         start: usize,
         len: usize,
+        power: u8,
     }
 }
 
