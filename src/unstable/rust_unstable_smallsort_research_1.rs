@@ -5,7 +5,7 @@ use core::intrinsics;
 use core::mem::{self, ManuallyDrop, SizedTypeProperties};
 use core::ptr;
 
-sort_impl!("unstable_small_sort_insertion");
+sort_impl!("unstable_smallsort_insertion");
 
 /// Sorts the slice, but might not preserve the order of equal elements.
 ///

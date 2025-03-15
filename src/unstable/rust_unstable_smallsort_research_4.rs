@@ -6,7 +6,7 @@ use core::mem::{self, ManuallyDrop, MaybeUninit, SizedTypeProperties};
 use core::ptr;
 use core::slice;
 
-sort_impl!("unstable_small_sort_hybrid");
+sort_impl!("unstable_smallsort_hybrid");
 
 /// Sorts the slice, but might not preserve the order of equal elements.
 ///
