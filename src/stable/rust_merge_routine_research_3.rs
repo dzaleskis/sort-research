@@ -429,44 +429,28 @@ where
         while arr_ptr < left.sub(2) && buf < right.sub(2) {
             // Consume the lesser side.
             // If equal, prefer the right run to maintain stability.
-
             unsafe {
                 if is_less(&*right.sub(1), &*left.sub(2)) {
                     // optimal merge left
-                    ptr::copy_nonoverlapping(
-                        decrement_and_get(left),
-                        decrement_and_get(&mut out),
-                        1,
-                    );
-                    ptr::copy_nonoverlapping(
-                        decrement_and_get(left),
-                        decrement_and_get(&mut out),
-                        1,
-                    );
+                    *left = left.sub(2);
+                    out = out.sub(2);
+                    ptr::copy_nonoverlapping(*left, out, 2);
                 } else if !is_less(&*right.sub(2), &*left.sub(1)) {
                     // optimal merge right
-                    ptr::copy_nonoverlapping(
-                        decrement_and_get(right),
-                        decrement_and_get(&mut out),
-                        1,
-                    );
-                    ptr::copy_nonoverlapping(
-                        decrement_and_get(right),
-                        decrement_and_get(&mut out),
-                        1,
-                    );
+                    *right = right.sub(2);
+                    out = out.sub(2);
+                    ptr::copy_nonoverlapping(*right, out, 2);
                 } else {
                     // branchless merge left/right
-                    let right_is_l = is_less(&*right.sub(1), &*left.sub(1));
-                    let right_not_l = !right_is_l;
-
-                    out = out.sub(1);
-                    ptr::copy_nonoverlapping(left.sub(1), out.sub(right_not_l as usize), 1);
-                    ptr::copy_nonoverlapping(right.sub(1), out.sub(right_is_l as usize), 1);
-
                     *left = left.sub(1);
                     *right = right.sub(1);
-                    out = out.sub(1);
+                    out = out.sub(2);
+
+                    let right_is_l = is_less(&**right, &**left);
+                    let right_not_l = !right_is_l;
+
+                    ptr::copy_nonoverlapping(&**left, out.add(right_is_l as usize), 1);
+                    ptr::copy_nonoverlapping(&**right, out.add(right_not_l as usize), 1);
                 }
             }
         }
