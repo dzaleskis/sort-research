@@ -135,7 +135,7 @@ where
     // shallow copies of the contents of `v` without risking the dtors running on copies if
     // `is_less` panics. When merging two sorted runs, this buffer holds a copy of the shorter run,
     // which will always have length at most `len / 2`.
-    let mut buf = Vec::with_capacity(len / 2);
+    let mut buf: Vec<T> = Vec::with_capacity(len / 2);
 
     // In order to identify natural runs in `v`, we traverse it backwards. That might seem like a
     // strange decision, but consider the fact that merges more often go in the opposite direction
@@ -188,7 +188,7 @@ where
                 merge(
                     &mut v[left.start..right.start + right.len],
                     left.len,
-                    buf.as_mut_ptr(),
+                    &mut buf,
                     &mut cmp,
                 );
             }
@@ -316,7 +316,7 @@ where
 /// Merge implementation switch.
 ///
 /// `c(a, b)` should return std::cmp::Ordering::Greater when `a` is greater than `b`.
-pub fn merge<T, F>(v: &mut [T], mid: usize, buf: *mut T, cmp: &mut F)
+pub fn merge<T, F>(v: &mut [T], mid: usize, buf: &mut Vec<T>, cmp: &mut F)
 where
     F: FnMut(&T, &T) -> Ordering,
 {
@@ -344,9 +344,9 @@ where
         let new_v = &mut v[left_start..(mid + right_end)];
 
         if new_mid > right_end {
-            merge_hi(new_v, new_mid, right_end, cmp);
+            merge_hi(new_v, new_mid, right_end, buf, cmp);
         } else {
-            merge_lo(new_v, new_mid, cmp);
+            merge_lo(new_v, new_mid, buf, cmp);
         }
     }
 }
@@ -356,12 +356,12 @@ where
 const MIN_GALLOP: usize = 7;
 
 /// Merge implementation used when the first run is smaller than the second.
-pub fn merge_lo<T, F>(list: &mut [T], first_len: usize, cmp: &mut F)
+pub fn merge_lo<T, F>(list: &mut [T], first_len: usize, buf: &mut Vec<T>, cmp: &mut F)
 where
     F: FnMut(&T, &T) -> Ordering,
 {
     unsafe {
-        let mut state = MergeLo::new(list, first_len);
+        let mut state = MergeLo::new(list, first_len, buf);
         state.merge(cmp);
     }
 }
@@ -375,19 +375,19 @@ struct MergeLo<'a, T: 'a> {
     second_pos: usize,
     dest_pos: usize,
     list: &'a mut [T],
-    tmp: Vec<T>,
+    tmp: &'a mut Vec<T>,
 }
 impl<'a, T: 'a> MergeLo<'a, T> {
     /// Constructor for a lower merge.
-    unsafe fn new(list: &'a mut [T], first_len: usize) -> Self {
-        let mut ret_val = MergeLo {
+    unsafe fn new(list: &'a mut [T], first_len: usize, buf: &'a mut Vec<T>) -> Self {
+        let ret_val = MergeLo {
             list_len: list.len(),
             first_pos: 0,
             first_len: first_len,
             second_pos: first_len,
             dest_pos: 0,
             list: list,
-            tmp: Vec::with_capacity(first_len),
+            tmp: buf,
         };
         // First, move the smallest run into temporary storage, leaving the
         // original contents uninitialized.
@@ -496,12 +496,17 @@ impl<'a, T: 'a> Drop for MergeLo<'a, T> {
 }
 
 /// Merge implementation used when the first run is larger than the second.
-pub fn merge_hi<T, F>(list: &mut [T], first_len: usize, second_len: usize, cmp: &mut F)
-where
+pub fn merge_hi<T, F>(
+    list: &mut [T],
+    first_len: usize,
+    second_len: usize,
+    buf: &mut Vec<T>,
+    cmp: &mut F,
+) where
     F: FnMut(&T, &T) -> Ordering,
 {
     unsafe {
-        let mut state = MergeHi::new(list, first_len, second_len);
+        let mut state = MergeHi::new(list, first_len, second_len, buf);
         state.merge(cmp);
     }
 }
@@ -513,18 +518,23 @@ struct MergeHi<'a, T: 'a> {
     second_pos: isize,
     dest_pos: isize,
     list: &'a mut [T],
-    tmp: Vec<T>,
+    tmp: &'a mut Vec<T>,
 }
 
 impl<'a, T: 'a> MergeHi<'a, T> {
     /// Constructor for a higher merge.
-    unsafe fn new(list: &'a mut [T], first_len: usize, second_len: usize) -> Self {
+    unsafe fn new(
+        list: &'a mut [T],
+        first_len: usize,
+        second_len: usize,
+        buf: &'a mut Vec<T>,
+    ) -> Self {
         let mut ret_val = MergeHi {
             first_pos: first_len as isize - 1,
             second_pos: second_len as isize - 1,
             dest_pos: list.len() as isize - 1,
             list: list,
-            tmp: Vec::with_capacity(second_len),
+            tmp: buf,
         };
         // First, move the smallest run into temporary storage, leaving the
         // original contents uninitialized.
