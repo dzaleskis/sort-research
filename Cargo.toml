@@ -79,12 +79,12 @@ default = [
     # "bench_type_f32_total",
     # "bench_type_f64_total",
 
-    "partition_research",
-    "pivot_research",
-    "unstable_smallsort_research",
-    "merge_policy_research",
+    # "partition_research",
+    # "pivot_research",
+    # "unstable_smallsort_research",
+    # "merge_policy_research",
     "merge_routine_research",
-    "stable_smallsort_research",
+    # "stable_smallsort_research",
     # "rust_ipnsort",
     # ALREADY INCLUDES DRIFTSORT AND IPNSORT
     # "rust_std_sys",
@@ -92,7 +92,7 @@ default = [
     # "cpp_std_libcxx",
     # "cpp_std_gcc4_3",
     # "cpp_pdqsort",
-    # "cpp_timsort",
+    "cpp_timsort",
     # "cpp_powersort",
     # DOES NOT WORK ON M1
     # "cpp_simdsort",

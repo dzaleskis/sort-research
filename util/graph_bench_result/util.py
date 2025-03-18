@@ -266,6 +266,7 @@ def build_implementation_meta_info():
         "merge_routine_branchless": (palette[2], "circle"),
         "merge_routine_bidirectional": (palette[3], "circle"),
         "merge_routine_cross": (palette[4], "circle"),
+        "merge_routine_gallop": (palette[5], "circle"),
 
         "stable_smallsort_insertion": (palette[1], "circle"),
         "stable_smallsort_network": (palette[2], "circle"),

@@ -316,42 +316,38 @@ where
 /// Merge implementation switch.
 ///
 /// `c(a, b)` should return std::cmp::Ordering::Greater when `a` is greater than `b`.
-pub fn merge<T, F>(list: &mut [T], mut first_len: usize, buf: *mut T, cmp: &mut F)
+pub fn merge<T, F>(v: &mut [T], mid: usize, buf: *mut T, cmp: &mut F)
 where
     F: FnMut(&T, &T) -> Ordering,
 {
-    let second_len: usize;
-    let first_off: usize;
-    if first_len == 0 {
+    if mid == 0 {
         return;
     }
 
     unsafe {
-        let (first, second) = list.split_at_mut(first_len);
-        second_len = gallop_left(
-            first.get_unchecked(first_len - 1),
-            second,
-            GallopMode::Reverse,
-            cmp,
-        );
-        if second_len == 0 {
+        let (left, right) = v.split_at_mut(mid);
+
+        // find where the last element of left would fit into right
+        let right_end = gallop_left(left.get_unchecked(mid - 1), right, GallopMode::Reverse, cmp);
+        if right_end == 0 {
             return;
         }
-        first_off = gallop_right(second.get_unchecked(0), first, GallopMode::Forward, cmp);
-        first_len -= first_off;
-        if first_len == 0 {
+
+        // find where the first element of right would fit into left
+        let left_start = gallop_right(right.get_unchecked(0), left, GallopMode::Forward, cmp);
+        let new_mid = mid - left_start;
+        if new_mid == 0 {
             return;
         }
-    }
-    let nlist = list
-        .split_at_mut(first_off)
-        .1
-        .split_at_mut(first_len + second_len)
-        .0;
-    if first_len > second_len {
-        merge_hi(nlist, first_len, second_len, cmp);
-    } else {
-        merge_lo(nlist, first_len, cmp);
+
+        // adjust the slice with new offsets, then merge by placing the smaller one into a temporary buffer
+        let new_v = &mut v[left_start..(mid + right_end)];
+
+        if new_mid > right_end {
+            merge_hi(new_v, new_mid, right_end, cmp);
+        } else {
+            merge_lo(new_v, new_mid, cmp);
+        }
     }
 }
 

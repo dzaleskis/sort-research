@@ -83,9 +83,13 @@ pub mod rust_merge_routine_research_1;
 #[cfg(feature = "merge_routine_research")]
 pub mod rust_merge_routine_research_2;
 
-// timsort with cross merge routine (from quadsort?)
+// timsort with cross merge routine (from quadsort)
 #[cfg(feature = "merge_routine_research")]
 pub mod rust_merge_routine_research_3;
+
+// timsort with galloping merge routine
+#[cfg(feature = "merge_routine_research")]
+pub mod rust_merge_routine_research_4;
 
 #[cfg(feature = "stable_smallsort_research")]
 pub mod rust_stable_smallsort_research_1;
