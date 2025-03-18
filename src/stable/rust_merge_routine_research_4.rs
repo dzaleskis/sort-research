@@ -512,9 +512,9 @@ pub fn merge_hi<T, F>(
 /// Implementation of `merge_hi`. We need to have an object in order to
 /// implement panic safety.
 struct MergeHi<'a, T: 'a> {
-    first_pos: isize,
-    second_pos: isize,
-    dest_pos: isize,
+    first_pos: usize,
+    second_pos: usize,
+    dest_pos: usize,
     list: &'a mut [T],
     tmp: &'a mut Vec<T>,
 }
@@ -527,23 +527,21 @@ impl<'a, T: 'a> MergeHi<'a, T> {
         second_len: usize,
         buf: &'a mut Vec<T>,
     ) -> Self {
-        let mut ret_val = MergeHi {
-            first_pos: first_len as isize - 1,
-            second_pos: second_len as isize - 1,
-            dest_pos: list.len() as isize - 1,
+        let ret_val = MergeHi {
+            first_pos: first_len,
+            second_pos: second_len,
+            dest_pos: list.len(),
             list: list,
             tmp: buf,
         };
         // First, move the smallest run into temporary storage, leaving the
         // original contents uninitialized.
         ret_val.tmp.set_len(second_len);
-        for i in 0..second_len {
-            ptr::copy_nonoverlapping(
-                ret_val.list.get_unchecked(i + first_len),
-                ret_val.tmp.get_unchecked_mut(i),
-                1,
-            );
-        }
+        ptr::copy_nonoverlapping(
+            ret_val.list.as_ptr().add(first_len),
+            ret_val.tmp.as_mut_ptr(),
+            second_len,
+        );
         ret_val
     }
     /// Perform the one-by-one comparison and insertion.
@@ -553,86 +551,70 @@ impl<'a, T: 'a> MergeHi<'a, T> {
     {
         let mut first_count: usize = 0;
         let mut second_count: usize = 0;
-        while self.first_pos < self.dest_pos && self.first_pos >= 0 {
-            debug_assert!(self.first_pos + self.second_pos + 1 == self.dest_pos);
+
+        while self.first_pos < self.dest_pos && self.first_pos > 0 {
+            debug_assert!(self.first_pos + self.second_pos == self.dest_pos);
+
             if (second_count | first_count) < MIN_GALLOP {
                 // One-at-a-time mode.
                 if cmp(
-                    self.tmp.get_unchecked(self.second_pos as usize),
-                    self.list.get_unchecked(self.first_pos as usize),
+                    self.tmp.get_unchecked(self.second_pos - 1),
+                    self.list.get_unchecked(self.first_pos - 1),
                 ) != Ordering::Less
                 {
-                    ptr::copy_nonoverlapping(
-                        self.tmp.get_unchecked(self.second_pos as usize),
-                        self.list.get_unchecked_mut(self.dest_pos as usize),
-                        1,
-                    );
+                    self.dest_pos -= 1;
                     self.second_pos -= 1;
-                } else {
                     ptr::copy_nonoverlapping(
-                        self.list.get_unchecked(self.first_pos as usize),
-                        self.list.get_unchecked_mut(self.dest_pos as usize),
+                        self.tmp.get_unchecked(self.second_pos),
+                        self.list.get_unchecked_mut(self.dest_pos),
                         1,
                     );
+                } else {
+                    self.dest_pos -= 1;
                     self.first_pos -= 1;
+                    ptr::copy_nonoverlapping(
+                        self.list.get_unchecked(self.first_pos),
+                        self.list.get_unchecked_mut(self.dest_pos),
+                        1,
+                    );
                 }
-                self.dest_pos -= 1;
             } else {
                 // Galloping mode.
-                first_count = self.first_pos as usize + 1
+                first_count = self.first_pos
                     - gallop_right(
-                        self.tmp.get_unchecked(self.second_pos as usize),
-                        self.list.split_at(self.first_pos as usize + 1).0,
+                        self.tmp.get_unchecked(self.second_pos - 1),
+                        self.list.split_at(self.first_pos).0,
                         GallopMode::Reverse,
                         cmp,
                     );
-                copy_backwards(
+                self.dest_pos -= first_count;
+                self.first_pos -= first_count;
+                ptr::copy(
                     self.list.get_unchecked(self.first_pos as usize),
                     self.list.get_unchecked_mut(self.dest_pos as usize),
                     first_count,
                 );
-                self.dest_pos -= first_count as isize;
-                self.first_pos -= first_count as isize;
-                debug_assert!(self.first_pos + self.second_pos + 1 == self.dest_pos);
-                if self.first_pos < self.dest_pos && self.first_pos >= 0 {
-                    second_count = self.second_pos as usize + 1
+                debug_assert!(self.first_pos + self.second_pos == self.dest_pos);
+
+                if self.first_pos < self.dest_pos && self.first_pos > 0 {
+                    second_count = self.second_pos
                         - gallop_left(
-                            self.list.get_unchecked(self.first_pos as usize),
-                            self.tmp.split_at(self.second_pos as usize + 1).0,
+                            self.list.get_unchecked(self.first_pos - 1),
+                            self.tmp.split_at(self.second_pos).0,
                             GallopMode::Reverse,
                             cmp,
                         );
-                    copy_nonoverlapping_backwards(
+                    self.dest_pos -= second_count;
+                    self.second_pos -= second_count;
+                    ptr::copy_nonoverlapping(
                         self.tmp.get_unchecked(self.second_pos as usize),
                         self.list.get_unchecked_mut(self.dest_pos as usize),
                         second_count,
                     );
-                    self.dest_pos -= second_count as isize;
-                    self.second_pos -= second_count as isize;
                 }
             }
         }
     }
-}
-
-/// Perform a backwards `ptr::copy_nonoverlapping`. Behave identically when size = 1, but behave
-/// differently all other times
-unsafe fn copy_backwards<T>(src: *const T, dest: *mut T, size: usize) {
-    ptr::copy(
-        src.offset(-(size as isize - 1)),
-        dest.offset(-(size as isize - 1)),
-        size,
-    )
-}
-
-/// Perform a backwards `ptr::copy_nonoverlapping`. Behave identically when size = 1, but behave
-/// differently all other times
-unsafe fn copy_nonoverlapping_backwards<T>(src: *const T, dest: *mut T, size: usize) {
-    ptr::copy_nonoverlapping(
-        src.offset(-(size as isize - 1)),
-        dest.offset(-(size as isize - 1)),
-        size,
-    )
 }
 
 impl<'a, T: 'a> Drop for MergeHi<'a, T> {
@@ -645,11 +627,11 @@ impl<'a, T: 'a> Drop for MergeHi<'a, T> {
             // spaces before dest_pos, and no uninitialized space after first_pos, this will ensure
             // that there are no uninitialized spaces inside the slice after we drop. Thus, the
             // function is safe.
-            if self.second_pos >= 0 {
-                copy_nonoverlapping_backwards(
-                    self.tmp.get_unchecked(self.second_pos as usize),
-                    self.list.get_unchecked_mut(self.dest_pos as usize),
-                    self.second_pos as usize + 1,
+            if self.second_pos > 0 {
+                ptr::copy_nonoverlapping(
+                    self.tmp.as_ptr(),
+                    self.list.as_mut_ptr().add(self.dest_pos - self.second_pos),
+                    self.second_pos,
                 );
             }
 
