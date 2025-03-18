@@ -392,13 +392,8 @@ impl<'a, T: 'a> MergeLo<'a, T> {
         // First, move the smallest run into temporary storage, leaving the
         // original contents uninitialized.
         ret_val.tmp.set_len(first_len);
-        for i in 0..first_len {
-            ptr::copy_nonoverlapping(
-                ret_val.list.get_unchecked(i),
-                ret_val.tmp.get_unchecked_mut(i),
-                1,
-            );
-        }
+        ptr::copy_nonoverlapping(ret_val.list.as_ptr(), ret_val.tmp.as_mut_ptr(), first_len);
+
         ret_val
     }
     /// Perform the one-by-one comparison and insertion.
@@ -408,8 +403,10 @@ impl<'a, T: 'a> MergeLo<'a, T> {
     {
         let mut first_count = 0;
         let mut second_count = 0;
+
         while self.second_pos > self.dest_pos && self.second_pos < self.list_len {
             debug_assert!(self.first_pos + (self.second_pos - self.first_len) == self.dest_pos);
+
             if (second_count | first_count) < MIN_GALLOP {
                 // One-at-a-time mode.
                 if cmp(
@@ -440,7 +437,7 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                 // Galloping mode.
                 second_count = gallop_left(
                     self.tmp.get_unchecked(self.first_pos),
-                    self.list.split_at(self.second_pos).1,
+                    &self.list[self.second_pos..],
                     GallopMode::Forward,
                     cmp,
                 );
@@ -452,10 +449,11 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                 self.dest_pos += second_count;
                 self.second_pos += second_count;
                 debug_assert!(self.first_pos + (self.second_pos - self.first_len) == self.dest_pos);
+
                 if self.second_pos > self.dest_pos && self.second_pos < self.list_len {
                     first_count = gallop_right(
                         self.list.get_unchecked(self.second_pos),
-                        self.tmp.split_at(self.first_pos).1,
+                        &self.tmp[self.first_pos..],
                         GallopMode::Forward,
                         cmp,
                     );
