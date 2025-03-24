@@ -217,6 +217,9 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     #[cfg(feature = "merge_routine_research")]
     bench_inst!(stable::rust_merge_routine_research_4);
 
+    #[cfg(feature = "merge_routine_research")]
+    bench_inst!(stable::rust_merge_routine_research_5);
+
     // STABLE SMALL SORTS
 
     #[cfg(feature = "stable_smallsort_research")]
