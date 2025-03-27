@@ -328,13 +328,13 @@ where
         let (left, right) = v.split_at_mut(mid);
 
         // find where the last element of left would fit into right
-        let right_end = gallop_left(left.get_unchecked(mid - 1), right, GallopMode::Reverse, cmp);
+        let right_end = gallop_left(left.get_unchecked(mid - 1), right, cmp);
         if right_end == 0 {
             return;
         }
 
         // find where the first element of right would fit into left
-        let left_start = gallop_right(right.get_unchecked(0), left, GallopMode::Forward, cmp);
+        let left_start = gallop_right(right.get_unchecked(0), left, cmp);
         let new_mid = mid - left_start;
         if new_mid == 0 {
             return;
@@ -439,7 +439,6 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                 second_count = gallop_left(
                     self.tmp.get_unchecked(self.first_pos),
                     &self.list[self.second_pos..],
-                    GallopMode::Forward,
                     cmp,
                 );
                 ptr::copy(
@@ -455,7 +454,6 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                     first_count = gallop_right(
                         self.list.get_unchecked(self.second_pos),
                         &self.tmp[self.first_pos..],
-                        GallopMode::Forward,
                         cmp,
                     );
                     ptr::copy_nonoverlapping(
@@ -592,7 +590,6 @@ impl<'a, T: 'a> MergeHi<'a, T> {
                 let first_gallop_count = gallop_right(
                     self.tmp.get_unchecked(self.second_pos - 1),
                     self.list.split_at(self.first_pos).0,
-                    GallopMode::Reverse,
                     cmp,
                 );
 
@@ -610,7 +607,6 @@ impl<'a, T: 'a> MergeHi<'a, T> {
                     let second_gallop_count = gallop_left(
                         self.list.get_unchecked(self.first_pos - 1),
                         self.tmp.split_at(self.second_pos).0,
-                        GallopMode::Reverse,
                         cmp,
                     );
 
@@ -664,113 +660,18 @@ pub enum GallopMode {
 
 /// Returns the index where key should be inserted, assuming it should be placed
 /// at the beginning of any cluster of equal items.
-pub fn gallop_left<T, F>(key: &T, list: &[T], mode: GallopMode, cmp: &mut F) -> usize
+pub fn gallop_left<T, F>(key: &T, list: &[T], cmp: &mut F) -> usize
 where
     F: FnMut(&T, &T) -> Ordering,
 {
-    let (mut base, mut lim) = gallop(key, list, mode, cmp);
-    while lim != 0 {
-        let ix = base + (lim / 2);
-        match cmp(&list[ix], key) {
-            Ordering::Less => {
-                base = ix + 1;
-                lim -= 1;
-            }
-            Ordering::Greater => (),
-            Ordering::Equal => {
-                if ix == 0 || cmp(&list[ix - 1], key) == Ordering::Less {
-                    base = ix;
-                    break;
-                }
-            }
-        };
-        lim /= 2;
-    }
-    base
+    list.partition_point(|probe| cmp(probe, &key) == Ordering::Less)
 }
 
-/// Returns the index where key should be inserted, assuming it shoul be placed
+/// Returns the index where key should be inserted, assuming it should be placed
 /// at the end of any cluster of equal items.
-pub fn gallop_right<T, F>(key: &T, list: &[T], mode: GallopMode, cmp: &mut F) -> usize
+pub fn gallop_right<T, F>(key: &T, list: &[T], cmp: &mut F) -> usize
 where
     F: FnMut(&T, &T) -> Ordering,
 {
-    let list_len = list.len();
-    let (mut base, mut lim) = gallop(key, list, mode, cmp);
-    while lim != 0 {
-        let ix = base + (lim / 2);
-        match cmp(&list[ix], key) {
-            Ordering::Less => {
-                base = ix + 1;
-                lim -= 1;
-            }
-            Ordering::Greater => (),
-            Ordering::Equal => {
-                base = ix + 1;
-                if ix == list_len - 1 || cmp(&list[ix + 1], key) == Ordering::Greater {
-                    break;
-                } else {
-                    lim -= 1;
-                }
-            }
-        };
-        lim /= 2;
-    }
-    base
-}
-
-fn gallop<T, F>(key: &T, list: &[T], mode: GallopMode, cmp: &mut F) -> (usize, usize)
-where
-    F: FnMut(&T, &T) -> Ordering,
-{
-    let list_len = list.len();
-    if list_len == 0 {
-        return (0, 0);
-    }
-    match mode {
-        GallopMode::Forward => {
-            let mut prev_val = 0;
-            let mut next_val = 1;
-            while next_val < list_len {
-                match cmp(&list[next_val], key) {
-                    Ordering::Less => {
-                        prev_val = next_val;
-                        next_val = ((next_val + 1) * 2) - 1;
-                    }
-                    Ordering::Greater => {
-                        break;
-                    }
-                    Ordering::Equal => {
-                        next_val += 1;
-                        break;
-                    }
-                }
-            }
-            if next_val > list_len {
-                next_val = list_len;
-            }
-            (prev_val, next_val - prev_val)
-        }
-        GallopMode::Reverse => {
-            let mut prev_val = list_len;
-            let mut next_val = ((prev_val + 1) / 2) - 1;
-            loop {
-                match cmp(&list[next_val], key) {
-                    Ordering::Greater => {
-                        prev_val = next_val + 1;
-                        next_val = (next_val + 1) / 2;
-                        if next_val != 0 {
-                            next_val -= 1;
-                        } else {
-                            break;
-                        }
-                    }
-                    Ordering::Less | Ordering::Equal => {
-                        break;
-                    }
-                }
-            }
-            (next_val, prev_val - next_val)
-        }
-    }
+    list.partition_point(|probe| cmp(probe, &key) != Ordering::Greater)
 }
