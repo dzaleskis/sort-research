@@ -111,7 +111,7 @@ default = [
     # "singeli_singelisort",
     # "golang_std",
     # PREVIOUS RUST IMPL
-    "rust_std_vendored",
+    # "rust_std_vendored",
     # "rust_wpwoodjr",
     # "rust_radsort",
     # "rust_dmsort",

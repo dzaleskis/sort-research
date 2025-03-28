@@ -404,10 +404,8 @@ impl<'a, T: 'a> MergeLo<'a, T> {
         let b = self.list.len() - self.first_len;
         let min_gallop = ((a + b) as f64).log2().ceil().powi(2) as usize;
 
-        while self.second_pos > self.dest_pos && self.second_pos < self.list_len {
-            debug_assert!(self.first_pos + (self.second_pos - self.first_len) == self.dest_pos);
-
-            if (second_count | first_count) < min_gallop {
+        loop {
+            while (second_count | first_count) < min_gallop {
                 // One-at-a-time mode.
                 if cmp(
                     self.tmp.get_unchecked(self.first_pos),
@@ -423,6 +421,15 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                     self.dest_pos += 1;
                     second_count += 1;
                     first_count = 0;
+
+                    if self.second_pos == self.list_len {
+                        ptr::copy_nonoverlapping(
+                            self.tmp.get_unchecked(self.first_pos),
+                            self.list.get_unchecked_mut(self.dest_pos),
+                            self.list_len - self.dest_pos,
+                        );
+                        return;
+                    }
                 } else {
                     ptr::copy_nonoverlapping(
                         self.tmp.get_unchecked(self.first_pos),
@@ -433,8 +440,14 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                     self.dest_pos += 1;
                     first_count += 1;
                     second_count = 0;
+
+                    if self.dest_pos == self.second_pos {
+                        return;
+                    }
                 }
-            } else {
+            }
+
+            while (second_count | first_count) >= min_gallop {
                 // Galloping mode.
                 second_count = gallop_left(
                     self.tmp.get_unchecked(self.first_pos),
@@ -450,19 +463,30 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                 self.second_pos += second_count;
                 debug_assert!(self.first_pos + (self.second_pos - self.first_len) == self.dest_pos);
 
-                if self.second_pos > self.dest_pos && self.second_pos < self.list_len {
-                    first_count = gallop_right(
-                        self.list.get_unchecked(self.second_pos),
-                        &self.tmp[self.first_pos..],
-                        cmp,
-                    );
+                if self.second_pos == self.list_len {
                     ptr::copy_nonoverlapping(
                         self.tmp.get_unchecked(self.first_pos),
                         self.list.get_unchecked_mut(self.dest_pos),
-                        first_count,
+                        self.list_len - self.dest_pos,
                     );
-                    self.dest_pos += first_count;
-                    self.first_pos += first_count;
+                    return;
+                }
+
+                first_count = gallop_right(
+                    self.list.get_unchecked(self.second_pos),
+                    &self.tmp[self.first_pos..],
+                    cmp,
+                );
+                ptr::copy_nonoverlapping(
+                    self.tmp.get_unchecked(self.first_pos),
+                    self.list.get_unchecked_mut(self.dest_pos),
+                    first_count,
+                );
+                self.dest_pos += first_count;
+                self.first_pos += first_count;
+
+                if self.dest_pos == self.second_pos {
+                    return;
                 }
             }
         }
@@ -650,12 +674,6 @@ impl<'a, T: 'a> Drop for MergeHi<'a, T> {
             self.tmp.set_len(0);
         }
     }
-}
-
-#[derive(Copy, Clone)]
-pub enum GallopMode {
-    Forward,
-    Reverse,
 }
 
 /// Returns the index where key should be inserted, assuming it should be placed
