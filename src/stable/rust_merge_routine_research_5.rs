@@ -579,10 +579,8 @@ impl<'a, T: 'a> MergeHi<'a, T> {
         let b = self.second_pos;
         let min_gallop = ((a + b) as f64).log2().ceil().powi(2) as usize;
 
-        while self.first_pos < self.dest_pos && self.first_pos > 0 {
-            debug_assert!(self.first_pos + self.second_pos == self.dest_pos);
-
-            if (second_count | first_count) < min_gallop {
+        loop {
+            while (second_count | first_count) < min_gallop {
                 // One-at-a-time mode.
                 if cmp(
                     self.tmp.get_unchecked(self.second_pos - 1),
@@ -598,6 +596,10 @@ impl<'a, T: 'a> MergeHi<'a, T> {
                     );
                     second_count += 1;
                     first_count = 0;
+
+                    if self.first_pos == self.dest_pos {
+                        return;
+                    }
                 } else {
                     self.dest_pos -= 1;
                     self.first_pos -= 1;
@@ -608,26 +610,44 @@ impl<'a, T: 'a> MergeHi<'a, T> {
                     );
                     first_count += 1;
                     second_count = 0;
+
+                    if self.first_pos == 0 {
+                        ptr::copy_nonoverlapping(
+                            self.tmp.as_ptr(),
+                            self.list.as_mut_ptr().add(self.dest_pos - self.second_pos),
+                            self.second_pos,
+                        );
+                        return;
+                    }
                 }
-            } else {
-                // Galloping mode.
-                let first_gallop_count = gallop_right(
-                    self.tmp.get_unchecked(self.second_pos - 1),
-                    self.list.split_at(self.first_pos).0,
-                    cmp,
-                );
 
-                first_count = self.first_pos - first_gallop_count;
-                self.dest_pos -= first_count;
-                self.first_pos -= first_count;
+                while (second_count | first_count) >= min_gallop {
+                    // Galloping mode.
+                    let first_gallop_count = gallop_right(
+                        self.tmp.get_unchecked(self.second_pos - 1),
+                        self.list.split_at(self.first_pos).0,
+                        cmp,
+                    );
 
-                ptr::copy(
-                    self.list.get_unchecked(self.first_pos as usize),
-                    self.list.get_unchecked_mut(self.dest_pos as usize),
-                    first_count,
-                );
+                    first_count = self.first_pos - first_gallop_count;
+                    self.dest_pos -= first_count;
+                    self.first_pos -= first_count;
 
-                if self.first_pos < self.dest_pos && self.first_pos > 0 {
+                    ptr::copy(
+                        self.list.get_unchecked(self.first_pos as usize),
+                        self.list.get_unchecked_mut(self.dest_pos as usize),
+                        first_count,
+                    );
+
+                    if self.first_pos == 0 {
+                        ptr::copy_nonoverlapping(
+                            self.tmp.as_ptr(),
+                            self.list.as_mut_ptr().add(self.dest_pos - self.second_pos),
+                            self.second_pos,
+                        );
+                        return;
+                    }
+
                     let second_gallop_count = gallop_left(
                         self.list.get_unchecked(self.first_pos - 1),
                         self.tmp.split_at(self.second_pos).0,
@@ -645,6 +665,10 @@ impl<'a, T: 'a> MergeHi<'a, T> {
                         self.list.get_unchecked_mut(self.dest_pos as usize),
                         second_count,
                     );
+
+                    if self.first_pos == self.dest_pos {
+                        return;
+                    }
                 }
             }
         }
