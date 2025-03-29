@@ -328,13 +328,13 @@ where
         let (left, right) = v.split_at_mut(mid);
 
         // find where the last element of left would fit into right
-        let right_end = gallop_left(left.get_unchecked(mid - 1), right, GallopMode::Reverse, cmp);
+        let right_end = gallop_left(left.get_unchecked(mid - 1), right, cmp);
         if right_end == 0 {
             return;
         }
 
         // find where the first element of right would fit into left
-        let left_start = gallop_right(right.get_unchecked(0), left, GallopMode::Forward, cmp);
+        let left_start = gallop_right(right.get_unchecked(0), left, cmp);
         let new_mid = mid - left_start;
         if new_mid == 0 {
             return;
@@ -350,10 +350,6 @@ where
         }
     }
 }
-
-/// The number of times any one run can win before we try galloping.
-/// Change this during testing.
-const MIN_GALLOP: usize = 7;
 
 /// Merge implementation used when the first run is smaller than the second.
 pub fn merge_lo<T, F>(list: &mut [T], first_len: usize, buf: &mut Vec<T>, cmp: &mut F)
@@ -404,10 +400,12 @@ impl<'a, T: 'a> MergeLo<'a, T> {
         let mut first_count = 0;
         let mut second_count = 0;
 
-        while self.second_pos > self.dest_pos && self.second_pos < self.list_len {
-            debug_assert!(self.first_pos + (self.second_pos - self.first_len) == self.dest_pos);
+        let a = self.first_len;
+        let b = self.list.len() - self.first_len;
+        let min_gallop = ((a + b) as f64).log2().ceil().powi(2) as usize;
 
-            if (second_count | first_count) < MIN_GALLOP {
+        loop {
+            while (second_count | first_count) < min_gallop {
                 // One-at-a-time mode.
                 if cmp(
                     self.tmp.get_unchecked(self.first_pos),
@@ -423,6 +421,15 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                     self.dest_pos += 1;
                     second_count += 1;
                     first_count = 0;
+
+                    if self.second_pos == self.list_len {
+                        ptr::copy_nonoverlapping(
+                            self.tmp.get_unchecked(self.first_pos),
+                            self.list.get_unchecked_mut(self.dest_pos),
+                            self.list_len - self.dest_pos,
+                        );
+                        return;
+                    }
                 } else {
                     ptr::copy_nonoverlapping(
                         self.tmp.get_unchecked(self.first_pos),
@@ -433,13 +440,18 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                     self.dest_pos += 1;
                     first_count += 1;
                     second_count = 0;
+
+                    if self.dest_pos == self.second_pos {
+                        return;
+                    }
                 }
-            } else {
+            }
+
+            while (second_count | first_count) >= min_gallop {
                 // Galloping mode.
                 second_count = gallop_left(
                     self.tmp.get_unchecked(self.first_pos),
                     &self.list[self.second_pos..],
-                    GallopMode::Forward,
                     cmp,
                 );
                 ptr::copy(
@@ -451,20 +463,30 @@ impl<'a, T: 'a> MergeLo<'a, T> {
                 self.second_pos += second_count;
                 debug_assert!(self.first_pos + (self.second_pos - self.first_len) == self.dest_pos);
 
-                if self.second_pos > self.dest_pos && self.second_pos < self.list_len {
-                    first_count = gallop_right(
-                        self.list.get_unchecked(self.second_pos),
-                        &self.tmp[self.first_pos..],
-                        GallopMode::Forward,
-                        cmp,
-                    );
+                if self.second_pos == self.list_len {
                     ptr::copy_nonoverlapping(
                         self.tmp.get_unchecked(self.first_pos),
                         self.list.get_unchecked_mut(self.dest_pos),
-                        first_count,
+                        self.list_len - self.dest_pos,
                     );
-                    self.dest_pos += first_count;
-                    self.first_pos += first_count;
+                    return;
+                }
+
+                first_count = gallop_right(
+                    self.list.get_unchecked(self.second_pos),
+                    &self.tmp[self.first_pos..],
+                    cmp,
+                );
+                ptr::copy_nonoverlapping(
+                    self.tmp.get_unchecked(self.first_pos),
+                    self.list.get_unchecked_mut(self.dest_pos),
+                    first_count,
+                );
+                self.dest_pos += first_count;
+                self.first_pos += first_count;
+
+                if self.dest_pos == self.second_pos {
+                    return;
                 }
             }
         }
@@ -553,10 +575,12 @@ impl<'a, T: 'a> MergeHi<'a, T> {
         let mut first_count: usize = 0;
         let mut second_count: usize = 0;
 
-        while self.first_pos < self.dest_pos && self.first_pos > 0 {
-            debug_assert!(self.first_pos + self.second_pos == self.dest_pos);
+        let a = self.first_pos;
+        let b = self.second_pos;
+        let min_gallop = ((a + b) as f64).log2().ceil().powi(2) as usize;
 
-            if (second_count | first_count) < MIN_GALLOP {
+        loop {
+            while (second_count | first_count) < min_gallop {
                 // One-at-a-time mode.
                 if cmp(
                     self.tmp.get_unchecked(self.second_pos - 1),
@@ -572,6 +596,10 @@ impl<'a, T: 'a> MergeHi<'a, T> {
                     );
                     second_count += 1;
                     first_count = 0;
+
+                    if self.first_pos == self.dest_pos {
+                        return;
+                    }
                 } else {
                     self.dest_pos -= 1;
                     self.first_pos -= 1;
@@ -582,31 +610,47 @@ impl<'a, T: 'a> MergeHi<'a, T> {
                     );
                     first_count += 1;
                     second_count = 0;
+
+                    if self.first_pos == 0 {
+                        ptr::copy_nonoverlapping(
+                            self.tmp.as_ptr(),
+                            self.list.as_mut_ptr().add(self.dest_pos - self.second_pos),
+                            self.second_pos,
+                        );
+                        return;
+                    }
                 }
-            } else {
-                // Galloping mode.
-                let first_gallop_count = gallop_right(
-                    self.tmp.get_unchecked(self.second_pos - 1),
-                    self.list.split_at(self.first_pos).0,
-                    GallopMode::Reverse,
-                    cmp,
-                );
 
-                first_count = self.first_pos - first_gallop_count;
-                self.dest_pos -= first_count;
-                self.first_pos -= first_count;
+                while (second_count | first_count) >= min_gallop {
+                    // Galloping mode.
+                    let first_gallop_count = gallop_right(
+                        self.tmp.get_unchecked(self.second_pos - 1),
+                        self.list.split_at(self.first_pos).0,
+                        cmp,
+                    );
 
-                ptr::copy(
-                    self.list.get_unchecked(self.first_pos as usize),
-                    self.list.get_unchecked_mut(self.dest_pos as usize),
-                    first_count,
-                );
+                    first_count = self.first_pos - first_gallop_count;
+                    self.dest_pos -= first_count;
+                    self.first_pos -= first_count;
 
-                if self.first_pos < self.dest_pos && self.first_pos > 0 {
+                    ptr::copy(
+                        self.list.get_unchecked(self.first_pos as usize),
+                        self.list.get_unchecked_mut(self.dest_pos as usize),
+                        first_count,
+                    );
+
+                    if self.first_pos == 0 {
+                        ptr::copy_nonoverlapping(
+                            self.tmp.as_ptr(),
+                            self.list.as_mut_ptr().add(self.dest_pos - self.second_pos),
+                            self.second_pos,
+                        );
+                        return;
+                    }
+
                     let second_gallop_count = gallop_left(
                         self.list.get_unchecked(self.first_pos - 1),
                         self.tmp.split_at(self.second_pos).0,
-                        GallopMode::Reverse,
                         cmp,
                     );
 
@@ -621,6 +665,10 @@ impl<'a, T: 'a> MergeHi<'a, T> {
                         self.list.get_unchecked_mut(self.dest_pos as usize),
                         second_count,
                     );
+
+                    if self.first_pos == self.dest_pos {
+                        return;
+                    }
                 }
             }
         }
@@ -652,121 +700,20 @@ impl<'a, T: 'a> Drop for MergeHi<'a, T> {
     }
 }
 
-#[derive(Copy, Clone)]
-pub enum GallopMode {
-    Forward,
-    Reverse,
+/// Returns the index where key should be inserted, assuming it should be placed
+/// at the beginning of any cluster of equal items.
+pub fn gallop_left<T, F>(key: &T, list: &[T], cmp: &mut F) -> usize
+where
+    F: FnMut(&T, &T) -> Ordering,
+{
+    list.partition_point(|probe| cmp(probe, &key) == Ordering::Less)
 }
 
 /// Returns the index where key should be inserted, assuming it should be placed
-/// at the beginning of any cluster of equal items.
-pub fn gallop_left<T, F>(key: &T, list: &[T], mode: GallopMode, cmp: &mut F) -> usize
-where
-    F: FnMut(&T, &T) -> Ordering,
-{
-    let (mut base, mut lim) = gallop(key, list, mode, cmp);
-    while lim != 0 {
-        let ix = base + (lim / 2);
-        match cmp(&list[ix], key) {
-            Ordering::Less => {
-                base = ix + 1;
-                lim -= 1;
-            }
-            Ordering::Greater => (),
-            Ordering::Equal => {
-                if ix == 0 || cmp(&list[ix - 1], key) == Ordering::Less {
-                    base = ix;
-                    break;
-                }
-            }
-        };
-        lim /= 2;
-    }
-    base
-}
-
-/// Returns the index where key should be inserted, assuming it shoul be placed
 /// at the end of any cluster of equal items.
-pub fn gallop_right<T, F>(key: &T, list: &[T], mode: GallopMode, cmp: &mut F) -> usize
+pub fn gallop_right<T, F>(key: &T, list: &[T], cmp: &mut F) -> usize
 where
     F: FnMut(&T, &T) -> Ordering,
 {
-    let list_len = list.len();
-    let (mut base, mut lim) = gallop(key, list, mode, cmp);
-    while lim != 0 {
-        let ix = base + (lim / 2);
-        match cmp(&list[ix], key) {
-            Ordering::Less => {
-                base = ix + 1;
-                lim -= 1;
-            }
-            Ordering::Greater => (),
-            Ordering::Equal => {
-                base = ix + 1;
-                if ix == list_len - 1 || cmp(&list[ix + 1], key) == Ordering::Greater {
-                    break;
-                } else {
-                    lim -= 1;
-                }
-            }
-        };
-        lim /= 2;
-    }
-    base
-}
-
-fn gallop<T, F>(key: &T, list: &[T], mode: GallopMode, cmp: &mut F) -> (usize, usize)
-where
-    F: FnMut(&T, &T) -> Ordering,
-{
-    let list_len = list.len();
-    if list_len == 0 {
-        return (0, 0);
-    }
-    match mode {
-        GallopMode::Forward => {
-            let mut prev_val = 0;
-            let mut next_val = 1;
-            while next_val < list_len {
-                match cmp(&list[next_val], key) {
-                    Ordering::Less => {
-                        prev_val = next_val;
-                        next_val = ((next_val + 1) * 2) - 1;
-                    }
-                    Ordering::Greater => {
-                        break;
-                    }
-                    Ordering::Equal => {
-                        next_val += 1;
-                        break;
-                    }
-                }
-            }
-            if next_val > list_len {
-                next_val = list_len;
-            }
-            (prev_val, next_val - prev_val)
-        }
-        GallopMode::Reverse => {
-            let mut prev_val = list_len;
-            let mut next_val = ((prev_val + 1) / 2) - 1;
-            loop {
-                match cmp(&list[next_val], key) {
-                    Ordering::Greater => {
-                        prev_val = next_val + 1;
-                        next_val = (next_val + 1) / 2;
-                        if next_val != 0 {
-                            next_val -= 1;
-                        } else {
-                            break;
-                        }
-                    }
-                    Ordering::Less | Ordering::Equal => {
-                        break;
-                    }
-                }
-            }
-            (next_val, prev_val - next_val)
-        }
-    }
+    list.partition_point(|probe| cmp(probe, &key) != Ordering::Greater)
 }
