@@ -71,9 +71,13 @@ pub mod rust_merge_policy_research_2;
 #[cfg(feature = "merge_policy_research")]
 pub mod rust_merge_policy_research_3;
 
-// timsort with 2-merge merge policy
+// timsort with 4-way powersort merge policy
 #[cfg(feature = "merge_policy_research")]
 pub mod rust_merge_policy_research_4;
+
+// timsort with 2-merge merge policy
+#[cfg(feature = "merge_policy_research")]
+pub mod rust_merge_policy_research_5;
 
 // timsort with basic branchless merge routine (original)
 #[cfg(feature = "merge_routine_research")]
