@@ -2,7 +2,7 @@
 
 use std::cmp::Ordering;
 use std::mem::{self, size_of};
-use std::ptr;
+use std::{ptr, u8};
 
 sort_impl!("merge_policy_powersort_4way");
 
@@ -143,7 +143,6 @@ where
     // backwards. To conclude, identifying runs by traversing backwards improves performance.
     let mut runs: Vec<Run> = vec![];
     let mut end = len;
-    let scale_factor = merge_tree_scale_factor(len);
 
     while end > 0 {
         // Find the next natural run, and reverse it if it's strictly descending.
@@ -180,100 +179,134 @@ where
         end = start;
 
         if runs.len() >= 1 {
-            let prev_run = runs.last().unwrap();
-            let power = merge_tree_depth(
-                next_run.start,
-                prev_run.start,
-                prev_run.start + prev_run.len,
-                scale_factor,
-            );
+            let mut run_a = runs.pop().unwrap();
+            let run_b = next_run;
 
-            // Merge some pairs of adjacent runs to satisfy the invariants.
-            while let Some(r) = collapse(&runs, power) {
-                let left = runs[r + 1];
-                let right = runs[r];
-                unsafe {
-                    merge(
-                        &mut v[left.start..right.start + right.len],
-                        left.len,
-                        buf.as_mut_ptr(),
-                        &mut is_less,
-                    );
+            run_a.power = merge_tree_depth(run_b.start, run_a.start, run_a.start + run_a.len, len);
+
+            while runs.len() >= 1 && runs[runs.len() - 1].power > run_a.power {
+                // the deeper we go into the stack, the more on the right in the input we go
+
+                if runs.len() >= 2 && runs[runs.len() - 1].power != runs[runs.len() - 2].power {
+                    let run_top_1 = runs.pop().unwrap();
+                    unsafe {
+                        merge_2way(
+                            &mut v[run_a.start..run_top_1.start + run_top_1.len],
+                            run_a.len,
+                            buf.as_mut_ptr(),
+                            &mut is_less,
+                        );
+                    }
+                    run_a.len = run_a.len + run_top_1.len;
+                } else if runs.len() >= 3
+                    && runs[runs.len() - 1].power != runs[runs.len() - 3].power
+                {
+                    let run_top_1 = runs.pop().unwrap();
+                    let run_top_2 = runs.pop().unwrap();
+                    unsafe {
+                        merge_3way(
+                            &mut v[run_a.start..run_top_2.start + run_top_2.len],
+                            run_a.len,
+                            run_a.len + run_top_1.len,
+                            buf.as_mut_ptr(),
+                            &mut is_less,
+                        )
+                    }
+                    run_a.len = run_a.len + run_top_1.len + run_top_2.len;
+                } else if runs.len() >= 3 {
+                    let run_top_1 = runs.pop().unwrap();
+                    let run_top_2 = runs.pop().unwrap();
+                    let run_top_3 = runs.pop().unwrap();
+                    unsafe {
+                        merge_4way(
+                            &mut v[run_a.start..run_top_3.start + run_top_3.len],
+                            run_a.len,
+                            run_a.len + run_top_1.len,
+                            run_a.len + run_top_1.len + run_top_2.len,
+                            buf.as_mut_ptr(),
+                            &mut is_less,
+                        )
+                    }
+                    run_a.len = run_a.len + run_top_1.len + run_top_2.len + run_top_3.len;
+                } else {
+                    break;
                 }
-                runs[r] = Run {
-                    start: left.start,
-                    len: left.len + right.len,
-                    power: 0,
-                };
-                runs.remove(r + 1);
             }
 
-            // set the power for the previous run
-            runs.last_mut().unwrap().power = power;
+            runs.push(run_a);
         }
 
-        // Push the next run onto the stack.
         runs.push(next_run);
     }
 
+    match runs.len() % 3 {
+        0 => {
+            let mut run_a = runs.pop().unwrap();
+            let run_top_1 = runs.pop().unwrap();
+            let run_top_2 = runs.pop().unwrap();
+            unsafe {
+                merge_3way(
+                    &mut v[run_a.start..run_top_2.start + run_top_2.len],
+                    run_a.len,
+                    run_a.len + run_top_1.len,
+                    buf.as_mut_ptr(),
+                    &mut is_less,
+                )
+            }
+            run_a.len = run_a.len + run_top_1.len + run_top_2.len;
+            runs.push(run_a);
+        }
+        2 => {
+            let mut run_a = runs.pop().unwrap();
+            let run_top_1 = runs.pop().unwrap();
+            unsafe {
+                merge_2way(
+                    &mut v[run_a.start..run_top_1.start + run_top_1.len],
+                    run_a.len,
+                    buf.as_mut_ptr(),
+                    &mut is_less,
+                );
+            }
+            run_a.len = run_a.len + run_top_1.len;
+            runs.push(run_a);
+        }
+        _ => {}
+    }
+
     // Merge remaining runs
-    while runs.len() >= 2 {
-        let r = runs.len() - 2;
-        let left = runs[r + 1];
-        let right = runs[r];
+    while runs.len() >= 4 {
+        let mut run_a = runs.pop().unwrap();
+        let run_top_1 = runs.pop().unwrap();
+        let run_top_2 = runs.pop().unwrap();
+        let run_top_3 = runs.pop().unwrap();
         unsafe {
-            merge(
-                &mut v[left.start..right.start + right.len],
-                left.len,
+            merge_4way(
+                &mut v[run_a.start..run_top_3.start + run_top_3.len],
+                run_a.len,
+                run_a.len + run_top_1.len,
+                run_a.len + run_top_1.len + run_top_2.len,
                 buf.as_mut_ptr(),
                 &mut is_less,
-            );
+            )
         }
-        runs[r] = Run {
-            start: left.start,
-            len: left.len + right.len,
-            power: 0,
-        };
-        runs.remove(r + 1);
+        run_a.len = run_a.len + run_top_1.len + run_top_2.len + run_top_3.len;
+        runs.push(run_a);
     }
 
     // Finally, exactly one run must remain in the stack.
     debug_assert!(runs.len() == 1 && runs[0].start == 0 && runs[0].len == len);
 
-    // Examines the stack of runs and identifies the next pair of runs to merge. More specifically,
-    // if `Some(r)` is returned, that means `runs[r]` and `runs[r + 1]` must be merged next. If the
-    // algorithm should continue building a new run instead, `None` is returned.
-    //
-    // TimSort is infamous for its buggy implementations, as described here:
-    // http://envisage-project.eu/timsort-specification-and-verification/
-    //
-    // The gist of the story is: we must enforce the invariants on the top four runs on the stack.
-    // Enforcing them on just top three is not sufficient to ensure that the invariants will still
-    // hold for *all* runs in the stack.
-    //
-    // This function correctly checks invariants for the top four runs. Additionally, if the top
-    // run starts at index 0, it will always demand a merge operation until the stack is fully
-    // collapsed, in order to complete the sort.
     #[inline]
-    fn collapse(runs: &[Run], power: u8) -> Option<usize> {
-        let n = runs.len();
-        // Z = runs[n - 1], Y = runs[n - 2], X = runs[n - 3], W = runs[n - 4]
-        if n >= 2 && runs[n - 2].power > power {
-            Some(n - 2)
-        } else {
-            None
-        }
-    }
+    fn merge_tree_depth(left: usize, mid: usize, right: usize, len: usize) -> u8 {
+        assert!(len <= (1 << 31));
+        let l2 = left + mid;
+        let r2 = mid + right;
+        let a = (l2 << 30) / len;
+        let b = (r2 << 30) / len;
+        let res = ((a ^ b).leading_zeros() - 1) / 2 + 1;
+        assert!(res <= u8::MAX as u32);
 
-    #[inline]
-    fn merge_tree_depth(left: usize, mid: usize, right: usize, scale_factor: u64) -> u8 {
-        let x = left as u64 + mid as u64;
-        let y = mid as u64 + right as u64;
-        ((scale_factor * x) ^ (scale_factor * y)).leading_zeros() as u8
-    }
-
-    pub fn merge_tree_scale_factor(n: usize) -> u64 {
-        ((1 << 62) + n as u64 - 1) / n as u64
+        return res as u8;
     }
 
     #[derive(Clone, Copy)]
@@ -354,6 +387,29 @@ where
     }
 }
 
+unsafe fn merge_4way<T, F>(
+    v: &mut [T],
+    g1: usize,
+    g2: usize,
+    g3: usize,
+    buf: *mut T,
+    is_less: &mut F,
+) where
+    F: FnMut(&T, &T) -> bool,
+{
+    merge_2way(&mut v[..g2], g1, buf, is_less);
+    merge_2way(&mut v[g2..], g3 - g2, buf, is_less);
+    merge_2way(v, g2, buf, is_less);
+}
+
+unsafe fn merge_3way<T, F>(v: &mut [T], g1: usize, g2: usize, buf: *mut T, is_less: &mut F)
+where
+    F: FnMut(&T, &T) -> bool,
+{
+    merge_2way(&mut v[..g2], g1, buf, is_less);
+    merge_2way(v, g2, buf, is_less);
+}
+
 /// Merges non-decreasing runs `v[..mid]` and `v[mid..]` using `buf` as temporary storage, and
 /// stores the result into `v[..]`.
 ///
@@ -361,12 +417,15 @@ where
 ///
 /// The two slices must be non-empty and `mid` must be in bounds. Buffer `buf` must be long enough
 /// to hold a copy of the shorter slice. Also, `T` must not be a zero-sized type.
-unsafe fn merge<T, F>(v: &mut [T], mid: usize, buf: *mut T, is_less: &mut F)
+unsafe fn merge_2way<T, F>(v: &mut [T], mid: usize, buf: *mut T, is_less: &mut F)
 where
     F: FnMut(&T, &T) -> bool,
 {
     let len = v.len();
     let v = v.as_mut_ptr();
+
+    debug_assert!(mid > 0);
+    debug_assert!(mid < len);
 
     // SAFETY: mid and len must be in-bounds of v.
     let (v_mid, v_end) = unsafe { (v.add(mid), v.add(len)) };
