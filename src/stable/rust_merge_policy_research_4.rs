@@ -1,6 +1,5 @@
 #![allow(unused_unsafe)]
 
-use core::slice;
 use std::cmp::Ordering;
 use std::mem::{self, size_of};
 use std::{ptr, u8};
@@ -398,21 +397,29 @@ unsafe fn merge_4way<T, F>(
 ) where
     F: FnMut(&T, &T) -> bool,
 {
-    // TODO: perform a ping-pong merge here
-    merge_2way(&mut v[..g2], g1, buf, is_less);
-    merge_2way(&mut v[g2..], g3 - g2, buf, is_less);
-    merge_2way(v, g2, buf, is_less);
+    // merge runs 1,2 into buf
+    merge_unguarded(v.as_ptr(), g2, g1, buf, is_less);
+    // merge runs 3,4 into buf
+    merge_unguarded(
+        v.as_ptr().add(g2),
+        v.len() - g2,
+        g3 - g2,
+        buf.add(g2),
+        is_less,
+    );
+    // merge runs 1, 2, 3, 4 back into v
+    merge_guarded(buf, v.len(), g2, v.as_mut_ptr(), is_less);
 }
 
 unsafe fn merge_3way<T, F>(v: &mut [T], g1: usize, g2: usize, buf: *mut T, is_less: &mut F)
 where
     F: FnMut(&T, &T) -> bool,
 {
-    // merge first 2 runs into buf
+    // merge runs 1,2 into buf
     merge_unguarded(v.as_ptr(), g2, g1, buf, is_less);
-    // copy third run into buf
+    // copy run 3 into buf, so it contains all of the runs
     ptr::copy_nonoverlapping(v.as_ptr().add(g2), buf.add(g2), v.len() - g2);
-    // merge buffer contents into v
+    // merge runs 1,2,3 which reside in buf into v
     merge_guarded(buf, v.len(), g2, v.as_mut_ptr(), is_less);
 }
 
