@@ -258,8 +258,8 @@ def build_implementation_meta_info():
 
         "merge_policy_timsort": (palette[1], "circle"),
         "merge_policy_shivers": (palette[2], "circle"),
-        "merge_policy_shivers_adaptive": (palette[3], "circle"),
-        "merge_policy_powersort": (palette[4], "circle"),
+        "merge_policy_powersort": (palette[3], "circle"),
+        "merge_policy_powersort_4way": (palette[4], "circle"),
         "merge_policy_2_merge": (palette[5], "circle"),
 
         "merge_routine_classic": (palette[1], "circle"),
