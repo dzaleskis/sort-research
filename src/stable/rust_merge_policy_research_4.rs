@@ -1,5 +1,6 @@
 #![allow(unused_unsafe)]
 
+use core::slice;
 use std::cmp::Ordering;
 use std::mem::{self, size_of};
 use std::{ptr, u8};
@@ -407,16 +408,46 @@ unsafe fn merge_3way<T, F>(v: &mut [T], g1: usize, g2: usize, buf: *mut T, is_le
 where
     F: FnMut(&T, &T) -> bool,
 {
-    merge_2way(&mut v[..g2], g1, buf, is_less);
-    merge_2way(v, g2, buf, is_less);
+    // merge first 2 runs into buf
+    merge_unguarded(v.as_ptr(), g2, g1, buf, is_less);
+    // copy third run into buf
+    ptr::copy_nonoverlapping(v.as_ptr().add(g2), buf.add(g2), v.len() - g2);
+    // merge buffer contents into v
+    merge_guarded(buf, v.len(), g2, v.as_mut_ptr(), is_less);
 }
 
 unsafe fn merge_2way<T, F>(v: &mut [T], g1: usize, buf: *mut T, is_less: &mut F)
 where
     F: FnMut(&T, &T) -> bool,
 {
-    merge(v, g1, buf, is_less);
+    merge_unguarded(v.as_ptr(), v.len(), g1, buf, is_less);
     ptr::copy_nonoverlapping(buf, v.as_mut_ptr(), v.len());
+}
+
+unsafe fn merge_guarded<T, F>(src: *const T, len: usize, mid: usize, dest: *mut T, is_less: &mut F)
+where
+    F: FnMut(&T, &T) -> bool,
+{
+    let drop_guard = CopyOnDrop { src, dest, len };
+
+    merge_unguarded(src, len, mid, dest, is_less);
+    mem::forget(drop_guard);
+
+    struct CopyOnDrop<T> {
+        src: *const T,
+        dest: *mut T,
+        len: usize,
+    }
+
+    impl<T> Drop for CopyOnDrop<T> {
+        fn drop(&mut self) {
+            // SAFETY: `src` must contain `len` initialized elements, and dst must
+            // be valid to write `len` elements.
+            unsafe {
+                ptr::copy_nonoverlapping(self.src, self.dest, self.len);
+            }
+        }
+    }
 }
 
 /// Merges non-decreasing runs `v[..mid]` and `v[mid..]` using `buf` as temporary storage, and
@@ -426,26 +457,28 @@ where
 ///
 /// The two slices must be non-empty and `mid` must be in bounds. Buffer `buf` must be long enough
 /// to hold a copy of the shorter slice. Also, `T` must not be a zero-sized type.
-unsafe fn merge<T, F>(v: &[T], mid: usize, dest: *mut T, is_less: &mut F)
-where
+unsafe fn merge_unguarded<T, F>(
+    src: *const T,
+    len: usize,
+    mid: usize,
+    dest: *mut T,
+    is_less: &mut F,
+) where
     F: FnMut(&T, &T) -> bool,
 {
-    let len = v.len();
-    let v = v.as_ptr();
-
     // SAFETY: mid and len must be in-bounds of v.
     debug_assert!(mid > 0);
     debug_assert!(mid < len);
 
     // SAFETY: mid and len must be in-bounds of v.
-    let (v_mid, v_end) = unsafe { (v.add(mid), v.add(len)) };
+    let (src_mid, src_end) = unsafe { (src.add(mid), src.add(len)) };
 
     // Initially, these pointers point to the beginnings of their arrays.
-    let mut left = v;
-    let mut right = v_mid;
+    let mut left = src;
+    let mut right = src_mid;
     let mut out = dest;
 
-    while left < v_mid && right < v_end {
+    while left < src_mid && right < src_end {
         // If equal, prefer the left run to maintain stability.
 
         // SAFETY: left and right must be valid and part of v same for out.
@@ -459,13 +492,13 @@ where
         }
     }
 
-    if left < v_mid {
+    if left < src_mid {
         // the left run is unconsumed
-        let rem_len = v_mid.sub_ptr(left);
+        let rem_len = src_mid.sub_ptr(left);
         ptr::copy_nonoverlapping(left, out, rem_len);
     } else {
         // the right run is unconsumed
-        let rem_len = v_end.sub_ptr(right);
+        let rem_len = src_end.sub_ptr(right);
         ptr::copy_nonoverlapping(right, out, rem_len);
     }
 }
