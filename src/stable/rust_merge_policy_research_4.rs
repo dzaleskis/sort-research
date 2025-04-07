@@ -242,56 +242,56 @@ where
 
     match runs.len() % 3 {
         0 => {
-            let mut run_a = runs.pop().unwrap();
-            let run_1 = runs.pop().unwrap();
+            let mut run_1 = runs.pop().unwrap();
             let run_2 = runs.pop().unwrap();
+            let run_3 = runs.pop().unwrap();
             unsafe {
                 merge_3way(
-                    &mut v[run_a.start..run_2.start + run_2.len],
-                    run_a.len,
-                    run_a.len + run_1.len,
+                    &mut v[run_1.start..run_3.start + run_3.len],
+                    run_1.len,
+                    run_1.len + run_2.len,
                     buf.as_mut_ptr(),
                     &mut is_less,
                 )
             }
-            run_a.len = run_a.len + run_1.len + run_2.len;
-            runs.push(run_a);
+            run_1.len = run_1.len + run_2.len + run_3.len;
+            runs.push(run_1);
         }
         2 => {
-            let mut run_a = runs.pop().unwrap();
-            let run_1 = runs.pop().unwrap();
+            let mut run_1 = runs.pop().unwrap();
+            let run_2 = runs.pop().unwrap();
             unsafe {
                 merge_2way(
-                    &mut v[run_a.start..run_1.start + run_1.len],
-                    run_a.len,
+                    &mut v[run_1.start..run_2.start + run_2.len],
+                    run_1.len,
                     buf.as_mut_ptr(),
                     &mut is_less,
                 );
             }
-            run_a.len = run_a.len + run_1.len;
-            runs.push(run_a);
+            run_1.len = run_1.len + run_2.len;
+            runs.push(run_1);
         }
         _ => {}
     }
 
     // Merge remaining runs
     while runs.len() >= 4 {
-        let mut run_a = runs.pop().unwrap();
-        let run_1 = runs.pop().unwrap();
+        let mut run_1 = runs.pop().unwrap();
         let run_2 = runs.pop().unwrap();
         let run_3 = runs.pop().unwrap();
+        let run_4 = runs.pop().unwrap();
         unsafe {
             merge_4way(
-                &mut v[run_a.start..run_3.start + run_3.len],
-                run_a.len,
-                run_a.len + run_1.len,
-                run_a.len + run_1.len + run_2.len,
+                &mut v[run_1.start..run_4.start + run_4.len],
+                run_1.len,
+                run_1.len + run_2.len,
+                run_1.len + run_2.len + run_3.len,
                 buf.as_mut_ptr(),
                 &mut is_less,
             )
         }
-        run_a.len = run_a.len + run_1.len + run_2.len + run_3.len;
-        runs.push(run_a);
+        run_1.len = run_1.len + run_2.len + run_3.len + run_4.len;
+        runs.push(run_1);
     }
 
     // Finally, exactly one run must remain in the stack.
