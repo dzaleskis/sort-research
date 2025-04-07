@@ -180,61 +180,28 @@ where
         end = start;
 
         if runs.len() >= 1 {
-            let mut run_1 = runs.pop().unwrap();
+            let last_run = runs.last_mut().unwrap();
 
-            run_1.power =
-                merge_tree_depth(next_run.start, run_1.start, run_1.start + run_1.len, len);
+            last_run.power = merge_tree_depth(
+                next_run.start,
+                last_run.start,
+                last_run.start + last_run.len,
+                len,
+            );
 
-            while runs.len() >= 1 && runs[runs.len() - 1].power > run_1.power {
-                // the deeper we go into the stack, the more on the right in the input we go
-
-                if runs.len() >= 2 && runs[runs.len() - 1].power != runs[runs.len() - 2].power {
-                    let run_2 = runs.pop().unwrap();
-                    unsafe {
-                        merge_2way(
-                            &mut v[run_1.start..run_2.start + run_2.len],
-                            run_1.len,
-                            buf.as_mut_ptr(),
-                            &mut is_less,
-                        );
-                    }
-                    run_1.len = run_1.len + run_2.len;
-                } else if runs.len() >= 3
-                    && runs[runs.len() - 1].power != runs[runs.len() - 3].power
+            while runs.len() >= 2 && runs[runs.len() - 2].power > runs[runs.len() - 1].power {
+                if runs.len() >= 3 && runs[runs.len() - 2].power != runs[runs.len() - 3].power {
+                    merge_2_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+                } else if runs.len() >= 4
+                    && runs[runs.len() - 2].power != runs[runs.len() - 4].power
                 {
-                    let run_2 = runs.pop().unwrap();
-                    let run_3 = runs.pop().unwrap();
-                    unsafe {
-                        merge_3way(
-                            &mut v[run_1.start..run_3.start + run_3.len],
-                            run_1.len,
-                            run_1.len + run_2.len,
-                            buf.as_mut_ptr(),
-                            &mut is_less,
-                        )
-                    }
-                    run_1.len = run_1.len + run_2.len + run_3.len;
-                } else if runs.len() >= 3 {
-                    let run_2 = runs.pop().unwrap();
-                    let run_3 = runs.pop().unwrap();
-                    let run_4 = runs.pop().unwrap();
-                    unsafe {
-                        merge_4way(
-                            &mut v[run_1.start..run_4.start + run_4.len],
-                            run_1.len,
-                            run_1.len + run_2.len,
-                            run_1.len + run_2.len + run_3.len,
-                            buf.as_mut_ptr(),
-                            &mut is_less,
-                        )
-                    }
-                    run_1.len = run_1.len + run_2.len + run_3.len + run_4.len;
+                    merge_3_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+                } else if runs.len() >= 4 {
+                    merge_4_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
                 } else {
                     break;
                 }
             }
-
-            runs.push(run_1);
         }
 
         runs.push(next_run);
