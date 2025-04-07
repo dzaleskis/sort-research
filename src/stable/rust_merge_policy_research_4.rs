@@ -179,61 +179,61 @@ where
         end = start;
 
         if runs.len() >= 1 {
-            let mut run_a = runs.pop().unwrap();
-            let run_b = next_run;
+            let mut run_1 = runs.pop().unwrap();
 
-            run_a.power = merge_tree_depth(run_b.start, run_a.start, run_a.start + run_a.len, len);
+            run_1.power =
+                merge_tree_depth(next_run.start, run_1.start, run_1.start + run_1.len, len);
 
-            while runs.len() >= 1 && runs[runs.len() - 1].power > run_a.power {
+            while runs.len() >= 1 && runs[runs.len() - 1].power > run_1.power {
                 // the deeper we go into the stack, the more on the right in the input we go
 
                 if runs.len() >= 2 && runs[runs.len() - 1].power != runs[runs.len() - 2].power {
-                    let run_top_1 = runs.pop().unwrap();
+                    let run_2 = runs.pop().unwrap();
                     unsafe {
                         merge_2way(
-                            &mut v[run_a.start..run_top_1.start + run_top_1.len],
-                            run_a.len,
+                            &mut v[run_1.start..run_2.start + run_2.len],
+                            run_1.len,
                             buf.as_mut_ptr(),
                             &mut is_less,
                         );
                     }
-                    run_a.len = run_a.len + run_top_1.len;
+                    run_1.len = run_1.len + run_2.len;
                 } else if runs.len() >= 3
                     && runs[runs.len() - 1].power != runs[runs.len() - 3].power
                 {
-                    let run_top_1 = runs.pop().unwrap();
-                    let run_top_2 = runs.pop().unwrap();
+                    let run_2 = runs.pop().unwrap();
+                    let run_3 = runs.pop().unwrap();
                     unsafe {
                         merge_3way(
-                            &mut v[run_a.start..run_top_2.start + run_top_2.len],
-                            run_a.len,
-                            run_a.len + run_top_1.len,
+                            &mut v[run_1.start..run_3.start + run_3.len],
+                            run_1.len,
+                            run_1.len + run_2.len,
                             buf.as_mut_ptr(),
                             &mut is_less,
                         )
                     }
-                    run_a.len = run_a.len + run_top_1.len + run_top_2.len;
+                    run_1.len = run_1.len + run_2.len + run_3.len;
                 } else if runs.len() >= 3 {
-                    let run_top_1 = runs.pop().unwrap();
-                    let run_top_2 = runs.pop().unwrap();
-                    let run_top_3 = runs.pop().unwrap();
+                    let run_2 = runs.pop().unwrap();
+                    let run_3 = runs.pop().unwrap();
+                    let run_4 = runs.pop().unwrap();
                     unsafe {
                         merge_4way(
-                            &mut v[run_a.start..run_top_3.start + run_top_3.len],
-                            run_a.len,
-                            run_a.len + run_top_1.len,
-                            run_a.len + run_top_1.len + run_top_2.len,
+                            &mut v[run_1.start..run_4.start + run_4.len],
+                            run_1.len,
+                            run_1.len + run_2.len,
+                            run_1.len + run_2.len + run_3.len,
                             buf.as_mut_ptr(),
                             &mut is_less,
                         )
                     }
-                    run_a.len = run_a.len + run_top_1.len + run_top_2.len + run_top_3.len;
+                    run_1.len = run_1.len + run_2.len + run_3.len + run_4.len;
                 } else {
                     break;
                 }
             }
 
-            runs.push(run_a);
+            runs.push(run_1);
         }
 
         runs.push(next_run);
@@ -242,32 +242,32 @@ where
     match runs.len() % 3 {
         0 => {
             let mut run_a = runs.pop().unwrap();
-            let run_top_1 = runs.pop().unwrap();
-            let run_top_2 = runs.pop().unwrap();
+            let run_1 = runs.pop().unwrap();
+            let run_2 = runs.pop().unwrap();
             unsafe {
                 merge_3way(
-                    &mut v[run_a.start..run_top_2.start + run_top_2.len],
+                    &mut v[run_a.start..run_2.start + run_2.len],
                     run_a.len,
-                    run_a.len + run_top_1.len,
+                    run_a.len + run_1.len,
                     buf.as_mut_ptr(),
                     &mut is_less,
                 )
             }
-            run_a.len = run_a.len + run_top_1.len + run_top_2.len;
+            run_a.len = run_a.len + run_1.len + run_2.len;
             runs.push(run_a);
         }
         2 => {
             let mut run_a = runs.pop().unwrap();
-            let run_top_1 = runs.pop().unwrap();
+            let run_1 = runs.pop().unwrap();
             unsafe {
                 merge_2way(
-                    &mut v[run_a.start..run_top_1.start + run_top_1.len],
+                    &mut v[run_a.start..run_1.start + run_1.len],
                     run_a.len,
                     buf.as_mut_ptr(),
                     &mut is_less,
                 );
             }
-            run_a.len = run_a.len + run_top_1.len;
+            run_a.len = run_a.len + run_1.len;
             runs.push(run_a);
         }
         _ => {}
@@ -276,20 +276,20 @@ where
     // Merge remaining runs
     while runs.len() >= 4 {
         let mut run_a = runs.pop().unwrap();
-        let run_top_1 = runs.pop().unwrap();
-        let run_top_2 = runs.pop().unwrap();
-        let run_top_3 = runs.pop().unwrap();
+        let run_1 = runs.pop().unwrap();
+        let run_2 = runs.pop().unwrap();
+        let run_3 = runs.pop().unwrap();
         unsafe {
             merge_4way(
-                &mut v[run_a.start..run_top_3.start + run_top_3.len],
+                &mut v[run_a.start..run_3.start + run_3.len],
                 run_a.len,
-                run_a.len + run_top_1.len,
-                run_a.len + run_top_1.len + run_top_2.len,
+                run_a.len + run_1.len,
+                run_a.len + run_1.len + run_2.len,
                 buf.as_mut_ptr(),
                 &mut is_less,
             )
         }
-        run_a.len = run_a.len + run_top_1.len + run_top_2.len + run_top_3.len;
+        run_a.len = run_a.len + run_1.len + run_2.len + run_3.len;
         runs.push(run_a);
     }
 
@@ -298,13 +298,11 @@ where
 
     #[inline]
     fn merge_tree_depth(left: usize, mid: usize, right: usize, len: usize) -> u8 {
-        assert!(len <= (1 << 31));
         let l2 = left + mid;
         let r2 = mid + right;
         let a = (l2 << 30) / len;
         let b = (r2 << 30) / len;
         let res = ((a ^ b).leading_zeros() - 1) / 2 + 1;
-        assert!(res <= u8::MAX as u32);
 
         return res as u8;
     }
