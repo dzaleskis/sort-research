@@ -56,6 +56,7 @@ fn bench_patterns<T: Ord + std::fmt::Debug>(
 ) {
     if test_len > 100_000 && (transform_name == "string" || transform_name == "1k") {
         // These are just too expensive.
+        println!("Too expensive to benchmark");
         return;
     }
 
