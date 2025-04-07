@@ -240,42 +240,62 @@ where
         runs.push(next_run);
     }
 
-    match runs.len() % 3 {
-        0 => {
-            let mut run_1 = runs.pop().unwrap();
-            let run_2 = runs.pop().unwrap();
-            let run_3 = runs.pop().unwrap();
-            unsafe {
-                merge_3way(
-                    &mut v[run_1.start..run_3.start + run_3.len],
-                    run_1.len,
-                    run_1.len + run_2.len,
-                    buf.as_mut_ptr(),
-                    &mut is_less,
-                )
-            }
-            run_1.len = run_1.len + run_2.len + run_3.len;
-            runs.push(run_1);
-        }
-        2 => {
-            let mut run_1 = runs.pop().unwrap();
-            let run_2 = runs.pop().unwrap();
-            unsafe {
-                merge_2way(
-                    &mut v[run_1.start..run_2.start + run_2.len],
-                    run_1.len,
-                    buf.as_mut_ptr(),
-                    &mut is_less,
-                );
-            }
-            run_1.len = run_1.len + run_2.len;
-            runs.push(run_1);
-        }
-        _ => {}
+    if runs.len() % 3 == 0 && runs.len() >= 3 {
+        merge_3_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+    } else if runs.len() % 3 == 2 {
+        merge_2_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
     }
 
     // Merge remaining runs
     while runs.len() >= 4 {
+        merge_4_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+    }
+
+    // Finally, exactly one run must remain in the stack.
+    debug_assert!(runs.len() == 1 && runs[0].start == 0 && runs[0].len == len);
+
+    fn merge_2_runs<T, F>(v: &mut [T], buf: *mut T, runs: &mut Vec<Run>, is_less: &mut F)
+    where
+        F: FnMut(&T, &T) -> bool,
+    {
+        let mut run_1 = runs.pop().unwrap();
+        let run_2 = runs.pop().unwrap();
+        unsafe {
+            merge_2way(
+                &mut v[run_1.start..run_2.start + run_2.len],
+                run_1.len,
+                buf,
+                is_less,
+            );
+        }
+        run_1.len = run_1.len + run_2.len;
+        runs.push(run_1);
+    }
+
+    fn merge_3_runs<T, F>(v: &mut [T], buf: *mut T, runs: &mut Vec<Run>, is_less: &mut F)
+    where
+        F: FnMut(&T, &T) -> bool,
+    {
+        let mut run_1 = runs.pop().unwrap();
+        let run_2 = runs.pop().unwrap();
+        let run_3 = runs.pop().unwrap();
+        unsafe {
+            merge_3way(
+                &mut v[run_1.start..run_3.start + run_3.len],
+                run_1.len,
+                run_1.len + run_2.len,
+                buf,
+                is_less,
+            )
+        }
+        run_1.len = run_1.len + run_2.len + run_3.len;
+        runs.push(run_1);
+    }
+
+    fn merge_4_runs<T, F>(v: &mut [T], buf: *mut T, runs: &mut Vec<Run>, is_less: &mut F)
+    where
+        F: FnMut(&T, &T) -> bool,
+    {
         let mut run_1 = runs.pop().unwrap();
         let run_2 = runs.pop().unwrap();
         let run_3 = runs.pop().unwrap();
@@ -286,16 +306,13 @@ where
                 run_1.len,
                 run_1.len + run_2.len,
                 run_1.len + run_2.len + run_3.len,
-                buf.as_mut_ptr(),
-                &mut is_less,
+                buf,
+                is_less,
             )
         }
         run_1.len = run_1.len + run_2.len + run_3.len + run_4.len;
         runs.push(run_1);
     }
-
-    // Finally, exactly one run must remain in the stack.
-    debug_assert!(runs.len() == 1 && runs[0].start == 0 && runs[0].len == len);
 
     #[inline]
     fn merge_tree_depth(left: usize, mid: usize, right: usize, len: usize) -> u8 {
