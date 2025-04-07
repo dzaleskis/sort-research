@@ -141,7 +141,8 @@ where
     // strange decision, but consider the fact that merges more often go in the opposite direction
     // (forwards). According to benchmarks, merging forwards is slightly faster than merging
     // backwards. To conclude, identifying runs by traversing backwards improves performance.
-    let mut runs: Vec<Run> = vec![];
+    let max_stack_height = 3 * (len.ilog2() as usize / 2) + 2;
+    let mut runs: Vec<Run> = Vec::with_capacity(max_stack_height);
     let mut end = len;
 
     while end > 0 {
