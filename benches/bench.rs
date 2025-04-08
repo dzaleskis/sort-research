@@ -310,39 +310,23 @@ fn ensure_true_random() {
 
 fn criterion_benchmark(c: &mut Criterion) {
     // Distribute points somewhat evenly up to 1e7 in log10 space.
-    let test_sizes = [
-        0, 1, 2, 3, 4, 6, 8, 10, 12, 17, 24, 35, 49, 70, 100, 200, 400, 900, 2_048, 4_833, 10_000,
-        22_367, 50_000, 100_000, 183_845, 400_000, 1_000_000, 2_000_000, 4_281_332, 10_000_000,
-    ];
+    let test_sizes = [100, 1000, 10_000, 100_000, 1_000_000, 10_000_000];
 
     patterns::use_random_seed_each_time();
     ensure_true_random();
 
     for test_len in test_sizes {
-        // Basic type often used to test sorting algorithms.
-        bench_patterns(c, test_len, "i32", |values| -> Vec<i32> { values });
-
-        // Common type for usize on 64-bit machines.
-        // Sorting indices is very common.
+        // Common type for usize on 64-bit machines. Inexpensive to compare and move.
         bench_patterns(c, test_len, "u64", |values| -> Vec<u64> {
             values.into_iter().map(extend_i32_to_u64).collect()
         });
 
-        // Larger type that is not Copy and does heap access.
-        // FFI String
-        bench_patterns(c, test_len, "string", |values| {
-            values
-                .into_iter()
-                .map(|val| FFIString::new(format!("{:010}", shift_i32_to_u32(val))))
-                .collect()
-        });
-
-        // Very large stack value.
+        // Very large stack value. Relatively inexpensive to compare, but very expensive to move.
         bench_patterns(c, test_len, "1k", |values| {
             values.iter().map(|val| FFIOneKibiByte::new(*val)).collect()
         });
 
-        // 16 byte stack value that is Copy but has a relatively expensive cmp implementation.
+        // 16 byte stack value. Inexpensive to move, but has a relatively expensive cmp implementation.
         bench_patterns(c, test_len, "f128", |values| {
             values.iter().map(|val| F128::new(*val)).collect()
         });
