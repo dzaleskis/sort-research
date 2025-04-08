@@ -66,8 +66,11 @@ fn bench_patterns<T: Ord + std::fmt::Debug>(
         ("random_d20", |len| patterns::random_uniform(len, 0..20)),
         ("random_p5", |len| random_x_percent(len, 5.0)),
         ("random_s95", |len| patterns::random_sorted(len, 95.0)),
-        ("ascending", patterns::ascending),
-        ("descending", patterns::descending),
+        ("random_m50", |len| patterns::random_merge(len, 50.0)),
+        ("saws_short", |len| patterns::saw_mixed_range(len, 20..50)),
+        // every tested algorithm handles these well, no reason to waste benchmark time on them
+        // ("ascending", patterns::ascending),
+        // ("descending", patterns::descending),
     ];
 
     // Custom patterns designed to find worst case performance.

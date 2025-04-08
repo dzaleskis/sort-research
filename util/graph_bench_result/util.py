@@ -253,7 +253,7 @@ def build_implementation_meta_info():
 
         "pivot_median_3": (palette[1], "square"),
         "pivot_compact_median_9": (palette[2], "square"),
-        "pivot_full_median_9": (palette[3], "square"),
+        "pivot_median_9": (palette[3], "square"),
         "pivot_recursive_median_3": (palette[4], "square"),
 
         "merge_policy_timsort": (palette[1], "circle"),
@@ -323,6 +323,8 @@ def build_pattern_meta_info():
         "random_s95": (palette[5], "circle"),
         "random_z1": (palette[6], "inverted_triangle"),
         "random": (palette[7], "triangle"),
+        "saws_short": (palette[0], "diamond"),
+        "random_m50": (palette[1], "square"),
     }
 
     return meta_info
