@@ -4,7 +4,7 @@ use std::env;
 use criterion::{criterion_group, criterion_main, Criterion};
 
 #[allow(unused_imports)]
-use sort_test_tools::ffi_types::{FFIOneKibiByte, FFIString, F128};
+use sort_test_tools::ffi_types::{FFIOneKibiBit, FFIString, F128};
 
 use sort_test_tools::patterns;
 
@@ -54,7 +54,7 @@ fn bench_patterns<T: Ord + std::fmt::Debug>(
     transform_name: &str,
     transform: fn(Vec<i32>) -> Vec<T>,
 ) {
-    if test_len > 100_000 && (transform_name == "string" || transform_name == "1k") {
+    if test_len > 1_000_000 && (transform_name == "string" || transform_name == "1k") {
         // These are just too expensive.
         println!("Too expensive to benchmark");
         return;
@@ -323,7 +323,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
         // Very large stack value. Relatively inexpensive to compare, but very expensive to move.
         bench_patterns(c, test_len, "1k", |values| {
-            values.iter().map(|val| FFIOneKibiByte::new(*val)).collect()
+            values.iter().map(|val| FFIOneKibiBit::new(*val)).collect()
         });
 
         // 16 byte stack value. Inexpensive to move, but has a relatively expensive cmp implementation.

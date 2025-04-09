@@ -10,7 +10,7 @@ use std::rc::Rc;
 use std::sync::Mutex;
 use std::sync::OnceLock;
 
-use crate::ffi_types::{FFIOneKibiByte, FFIString, F128};
+use crate::ffi_types::{FFIOneKibiBit, FFIString, F128};
 use crate::patterns;
 use crate::Sort;
 
@@ -477,7 +477,7 @@ gen_sort_test_fns_with_default_patterns!(
 
 gen_sort_test_fns_with_default_patterns!(
     correct_1k,
-    |len, pattern_fn| test_is_sorted::<FFIOneKibiByte, S>(len, FFIOneKibiByte::new, pattern_fn),
+    |len, pattern_fn| test_is_sorted::<FFIOneKibiBit, S>(len, FFIOneKibiBit::new, pattern_fn),
     &TEST_LENGTHS[..TEST_LENGTHS.len() - 2],
     []
 );

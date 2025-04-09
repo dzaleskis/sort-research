@@ -246,7 +246,7 @@ def build_implementation_meta_info():
 
         "partition_hoare_branchy": (palette[1], "circle"),
         "partition_hoare_branchy_cyclic": (palette[2], "circle"),
-        "partition_hoare_branchless": (palette[3], "circle"),
+        "partition_hoare_branchless_block": (palette[3], "circle"),
         "partition_lomuto_branchy": (palette[4], "circle"),
         "partition_lomuto_branchless_cyclic": (palette[5], "circle"),
         "partition_lomuto_branchless_block": (palette[6], "circle"),
