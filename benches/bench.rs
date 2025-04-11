@@ -54,7 +54,7 @@ fn bench_patterns<T: Ord + std::fmt::Debug>(
     transform_name: &str,
     transform: fn(Vec<i32>) -> Vec<T>,
 ) {
-    if test_len > 1_000_000 && (transform_name == "string" || transform_name == "1k") {
+    if test_len > 1_000_000 && (transform_name == "f128" || transform_name == "1k") {
         // These are just too expensive.
         println!("Too expensive to benchmark");
         return;
