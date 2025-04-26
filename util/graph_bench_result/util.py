@@ -244,12 +244,12 @@ def build_implementation_meta_info():
         "rust_ipn_unstable": (palette[5], "square"),
         "rust_ipnsort_unstable": (palette[0], "circle"),
 
-        "partition_hoare_branchy": (palette[1], "circle"),
-        "partition_hoare_branchy_cyclic": (palette[2], "circle"),
-        "partition_hoare_branchless_block": (palette[3], "circle"),
-        "partition_lomuto_branchy": (palette[4], "circle"),
-        "partition_lomuto_branchless_cyclic": (palette[5], "circle"),
-        "partition_lomuto_branchless_block": (palette[6], "circle"),
+        "partition_hoare_branchy_cyclic": (palette[1], "circle"),
+        "partition_hoare_branchless_block": (palette[2], "circle"),
+        "partition_lomuto_branchy": (palette[3], "circle"),
+        "partition_lomuto_branchless_cyclic": (palette[4], "circle"),
+        "partition_lomuto_branchless_block": (palette[5], "circle"),
+        "partition_stable": (palette[6], "circle"),
 
         "pivot_median_3": (palette[1], "square"),
         "pivot_compact_median_9": (palette[2], "square"),

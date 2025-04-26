@@ -6,7 +6,7 @@ use core::mem::{self, ManuallyDrop, MaybeUninit, SizedTypeProperties};
 use core::ptr;
 use core::slice;
 
-sort_impl!("partition_hoare_branchy_cyclic");
+sort_impl!("partition_stable");
 
 /// Sorts the slice, but might not preserve the order of equal elements.
 ///
@@ -153,10 +153,12 @@ where
         return;
     }
 
+    let mut scratch = Vec::with_capacity(len);
+
     // Limit the number of imbalanced partitions to `2 * floor(log2(len))`.
     // The binary OR by one is used to eliminate the zero-check in the logarithm.
     let limit = 2 * (len | 1).ilog2();
-    quicksort(v, None, limit, is_less);
+    stable_quicksort(v, scratch.spare_capacity_mut(), limit, None, is_less);
 }
 
 /// Finds a run of sorted elements starting at the beginning of the slice.
@@ -204,6 +206,27 @@ unsafe impl<T: ?Sized> Freeze for *const T {}
 unsafe impl<T: ?Sized> Freeze for *mut T {}
 unsafe impl<T: ?Sized> Freeze for &T {}
 unsafe impl<T: ?Sized> Freeze for &mut T {}
+
+#[const_trait]
+trait IsFreeze {
+    const IS_FREEZE: bool;
+}
+
+impl<T> const IsFreeze for T {
+    default const IS_FREEZE: bool = false;
+}
+
+impl<T: Freeze> const IsFreeze for T {
+    const IS_FREEZE: bool = true;
+}
+
+#[must_use]
+const fn has_direct_interior_mutability<T>() -> bool {
+    // If a type has interior mutability it may alter itself during comparison
+    // in a way that must be preserved after the sort operation concludes.
+    // Otherwise a type like Mutex<Option<Box<str>>> could lead to double free.
+    !T::IS_FREEZE
+}
 
 // Recursively select a pseudomedian if above this threshold.
 const PSEUDO_MEDIAN_REC_THRESHOLD: usize = 64;
@@ -294,23 +317,19 @@ fn median3<T, F: FnMut(&T, &T) -> bool>(a: &T, b: &T, c: &T, is_less: &mut F) ->
     }
 }
 
-/// Sorts `v` recursively.
+/// Sorts `v` recursively using quicksort.
 ///
-/// If the slice had a predecessor in the original array, it is specified as `ancestor_pivot`.
-///
-/// `limit` is the number of allowed imbalanced partitions before switching to `heapsort`. If zero,
-/// this function will immediately switch to heapsort.
-pub(crate) fn quicksort<'a, T, F>(
-    mut v: &'a mut [T],
-    mut ancestor_pivot: Option<&'a T>,
+/// `limit` when initialized with `c*log(v.len())` for some c ensures we do not
+/// overflow the stack or go quadratic.
+#[inline(never)]
+pub fn stable_quicksort<T, F: FnMut(&T, &T) -> bool>(
+    mut v: &mut [T],
+    scratch: &mut [MaybeUninit<T>],
     mut limit: u32,
+    mut left_ancestor_pivot: Option<&T>,
     is_less: &mut F,
-) where
-    F: FnMut(&T, &T) -> bool,
-{
+) {
     loop {
-        // println!("len: {}", v.len());
-
         if v.len() <= T::small_sort_threshold() {
             T::small_sort(v, is_less);
             return;
@@ -325,211 +344,208 @@ pub(crate) fn quicksort<'a, T, F>(
 
         limit -= 1;
 
-        // Choose a pivot and try guessing whether the slice is already sorted.
         let pivot_pos = choose_pivot(v, is_less);
-
-        // If the chosen pivot is equal to the predecessor, then it's the smallest element in the
-        // slice. Partition the slice into elements equal to and elements greater than the pivot.
-        // This case is usually hit when the slice contains many duplicate elements.
-        if let Some(p) = ancestor_pivot {
-            // SAFETY: We assume choose_pivot yields an in-bounds position.
-            if !is_less(p, unsafe { v.get_unchecked(pivot_pos) }) {
-                let num_lt = partition(v, pivot_pos, &mut |a, b| !is_less(b, a));
-
-                // Continue sorting elements greater than the pivot. We know that `num_lt` contains
-                // the pivot. So we can continue after `num_lt`.
-                v = &mut v[(num_lt + 1)..];
-                ancestor_pivot = None;
-                continue;
-            }
-        }
-
-        // Partition the slice.
-        let num_lt = partition(v, pivot_pos, is_less);
-        // SAFETY: partition ensures that `num_lt` will be in-bounds.
-        unsafe { intrinsics::assume(num_lt < v.len()) };
-
-        // Split the slice into `left`, `pivot`, and `right`.
-        let (left, right) = v.split_at_mut(num_lt);
-        let (pivot, right) = right.split_at_mut(1);
-        let pivot = &pivot[0];
-
-        // Recurse into the left side. We have a fixed recursion limit, testing shows no real
-        // benefit for recursing into the shorter side.
-        quicksort(left, ancestor_pivot, limit, is_less);
-
-        // Continue with the right side.
-        v = right;
-        ancestor_pivot = Some(pivot);
-    }
-}
-
-// TODO move to main docs.
-// Instead of swapping one pair at the time, it is more efficient to perform a cyclic
-// permutation. This is not strictly equivalent to swapping, but produces a similar
-// result using fewer memory operations.
-//
-// Example cyclic permutation to swap A,B,C,D with W,X,Y,Z
-//
-// A -> TMP
-// Z -> A   | Z,B,C,D ___ W,X,Y,Z
-//
-// Loop iter 1
-// B -> Z   | Z,B,C,D ___ W,X,Y,B
-// Y -> B   | Z,Y,C,D ___ W,X,Y,B
-//
-// Loop iter 2
-// C -> Y   | Z,Y,C,D ___ W,X,C,B
-// X -> C   | Z,Y,X,D ___ W,X,C,B
-//
-// Loop iter 3
-// D -> X   | Z,Y,X,D ___ W,D,C,B
-// W -> D   | Z,Y,X,W ___ W,D,C,B
-//
-// TMP -> W | Z,Y,X,W ___ A,D,C,B
-
-/// Takes the input slice `v` and re-arranges elements such that when the call returns normally
-/// all elements that compare true for `is_less(elem, pivot)` where `pivot == v[pivot_pos]` are
-/// on the left side of `v` followed by the other elements, notionally considered greater or
-/// equal to `pivot`.
-///
-/// Returns the number of elements that are compared true for `is_less(elem, pivot)`.
-///
-/// If `is_less` does not implement a total order the resulting order and return value are
-/// unspecified. All original elements will remain in `v` and any possible modifications via
-/// interior mutability will be observable. Same is true if `is_less` panics or `v.len()`
-/// exceeds `scratch.len()`.
-fn partition<T, F>(v: &mut [T], pivot: usize, is_less: &mut F) -> usize
-where
-    F: FnMut(&T, &T) -> bool,
-{
-    let len = v.len();
-
-    // Allows for panic-free code-gen by proving this property to the compiler.
-    if len == 0 {
-        return 0;
-    }
-
-    // Allows for panic-free code-gen by proving this property to the compiler.
-    if pivot >= len {
-        intrinsics::abort();
-    }
-
-    // Place the pivot at the beginning of slice.
-    v.swap(0, pivot);
-    let (pivot, v_without_pivot) = v.split_at_mut(1);
-
-    // Assuming that Rust generates noalias LLVM IR we can be sure that a partition function
-    // signature of the form `(v: &mut [T], pivot: &T)` guarantees that pivot and v can't alias.
-    // Having this guarantee is crucial for optimizations. It's possible to copy the pivot value
-    // into a stack value, but this creates issues for types with interior mutability mandating
-    // a drop guard.
-    let pivot = &mut pivot[0];
-
-    // This construct is used to limit the LLVM IR generated, which saves large amounts of
-    // compile-time by only instantiating the code that is needed. Idea by Frank Steffahn.
-    let num_lt = partition_hoare_branchy_cyclic(v_without_pivot, pivot, is_less);
-
-    // Place the pivot between the two partitions.
-    v.swap(0, num_lt);
-
-    num_lt
-}
-
-struct GapGuard<T> {
-    pos: *mut T,
-    value: ManuallyDrop<T>,
-}
-
-impl<T> Drop for GapGuard<T> {
-    fn drop(&mut self) {
+        // SAFETY: choose_pivot promises to return a valid pivot index.
         unsafe {
-            ptr::write(self.pos, ManuallyDrop::take(&mut self.value));
+            intrinsics::assume(pivot_pos < v.len());
         }
+
+        // SAFETY: We only access the temporary copy for Freeze types, otherwise
+        // self-modifications via `is_less` would not be observed and this would
+        // be unsound. Our temporary copy does not escape this scope.
+        let pivot_copy = unsafe { ManuallyDrop::new(ptr::read(&v[pivot_pos])) };
+        let pivot_ref = (!has_direct_interior_mutability::<T>()).then_some(&*pivot_copy);
+
+        // We choose a pivot, and check if this pivot is equal to our left
+        // ancestor. If true, we do a partition putting equal elements on the
+        // left and do not recurse on it. This gives O(n log k) sorting for k
+        // distinct values, a strategy borrowed from pdqsort. For types with
+        // interior mutability we can't soundly create a temporary copy of the
+        // ancestor pivot, and use left_partition_len == 0 as our method for
+        // detecting when we re-use a pivot, which means we do at most three
+        // partition operations with pivot p instead of the optimal two.
+        let mut perform_equal_partition = false;
+        if let Some(la_pivot) = left_ancestor_pivot {
+            perform_equal_partition = !is_less(la_pivot, &v[pivot_pos]);
+        }
+
+        let mut left_partition_len = 0;
+        if !perform_equal_partition {
+            left_partition_len = stable_partition(v, scratch, pivot_pos, false, is_less);
+            perform_equal_partition = left_partition_len == 0;
+        }
+
+        if perform_equal_partition {
+            let mid_eq = stable_partition(v, scratch, pivot_pos, true, &mut |a, b| !is_less(b, a));
+            v = &mut v[mid_eq..];
+            left_ancestor_pivot = None;
+            continue;
+        }
+
+        // Process left side with the next loop iter, right side with recursion.
+        let (left, right) = v.split_at_mut(left_partition_len);
+        stable_quicksort(right, scratch, limit, pivot_ref, is_less);
+        v = left;
     }
 }
 
-#[cfg_attr(feature = "no_inline_sub_functions", inline(never))]
-fn partition_hoare_branchy_cyclic<T, F: FnMut(&T, &T) -> bool>(
+/// Partitions `v` using pivot `p = v[pivot_pos]` and returns the number of
+/// elements less than `p`. The relative order of elements that compare < p and
+/// those that compare >= p is preserved - it is a stable partition.
+///
+/// If `is_less` is not a strict total order or panics, `scratch.len() < v.len()`,
+/// or `pivot_pos >= v.len()`, the result and `v`'s state is sound but unspecified.
+fn stable_partition<T, F: FnMut(&T, &T) -> bool>(
     v: &mut [T],
-    pivot: &T,
+    scratch: &mut [MaybeUninit<T>],
+    pivot_pos: usize,
+    pivot_goes_left: bool,
     is_less: &mut F,
 ) -> usize {
     let len = v.len();
 
-    if len == 0 {
-        return 0;
+    if intrinsics::unlikely(scratch.len() < len || pivot_pos >= len) {
+        core::intrinsics::abort()
     }
 
-    // Optimized for large types that are expensive to move. Not optimized for integers. Optimized
-    // for small code-gen, assuming that is_less is an expensive operation that generates
-    // substantial amounts of code or a call. And that copying elements will likely be a call to
-    // memcpy. Using 2 `ptr::copy_nonoverlapping` has the chance to be faster than
-    // `ptr::swap_nonoverlapping` because `memcpy` can use wide SIMD based on runtime feature
-    // detection. Benchmarks support this analysis.
+    let v_base = v.as_ptr();
+    let scratch_base = MaybeUninit::slice_as_mut_ptr(scratch);
 
-    let mut gap_opt: Option<GapGuard<T>> = None;
+    // The core idea is to write the values that compare as less-than to the left
+    // side of `scratch`, while the values that compared as greater or equal than
+    // `v[pivot_pos]` go to the right side of `scratch` in reverse. See
+    // PartitionState for details.
 
-    // SAFETY: The left-to-right scanning loop performs a bounds check, where we know that `left >=
-    // v_base && left < right && right <= v_base.add(len)`. The right-to-left scanning loop performs
-    // a bounds check ensuring that `right` is in-bounds. We checked that `len` is more than zero,
-    // which means that unconditional `right = right.sub(1)` is safe to do. The exit check makes
-    // sure that `left` and `right` never alias, making `ptr::copy_nonoverlapping` safe. The
-    // drop-guard `gap` ensures that should `is_less` panic we always overwrite the duplicate in the
-    // input. `gap.pos` stores the previous value of `right` and starts at `right` and so it too is
-    // in-bounds. We never pass the saved `gap.value` to `is_less` while it is inside the `GapGuard`
-    // thus any changes via interior mutability will be observed.
+    // SAFETY: see individual comments.
     unsafe {
-        let v_base = v.as_mut_ptr();
+        // SAFETY: we made sure the scratch has length >= len and that pivot_pos
+        // is in-bounds. v and scratch are disjoint slices.
+        let pivot = v_base.add(pivot_pos);
+        let mut state = PartitionState::new(v_base, scratch_base, len);
 
-        let mut left = v_base;
-        let mut right = v_base.add(len);
+        let mut pivot_in_scratch = ptr::null_mut();
+        let mut loop_end_pos = pivot_pos;
 
+        // SAFETY: this loop is equivalent to calling state.partition_one
+        // exactly len times.
         loop {
-            // Find the first element greater than the pivot.
-            while left < right && is_less(&*left, pivot) {
-                left = left.add(1);
-            }
-
-            // Find the last element equal to the pivot.
-            loop {
-                right = right.sub(1);
-                if left >= right || is_less(&*right, pivot) {
-                    break;
+            // Ideally the outer loop won't be unrolled, to save binary size,
+            // but we do want the inner loop to be unrolled for small types, as
+            // this gave significant performance boosts in benchmarks. Unrolling
+            // through for _ in 0..UNROLL_LEN { .. } instead of manually improves
+            // compile times but has a ~10-20% performance penalty on opt-level=s.
+            if const { mem::size_of::<T>() <= 16 } {
+                const UNROLL_LEN: usize = 4;
+                let unroll_end = v_base.add(loop_end_pos.saturating_sub(UNROLL_LEN - 1));
+                while state.scan < unroll_end {
+                    state.partition_one(is_less(&*state.scan, &*pivot));
+                    state.partition_one(is_less(&*state.scan, &*pivot));
+                    state.partition_one(is_less(&*state.scan, &*pivot));
+                    state.partition_one(is_less(&*state.scan, &*pivot));
                 }
             }
 
-            if left >= right {
+            let loop_end = v_base.add(loop_end_pos);
+            while state.scan < loop_end {
+                state.partition_one(is_less(&*state.scan, &*pivot));
+            }
+
+            if loop_end_pos == len {
                 break;
             }
 
-            // Swap the found pair of out-of-order elements via cyclic permutation.
-            let is_first_swap_pair = gap_opt.is_none();
+            // We avoid comparing pivot with itself, as this could create deadlocks for
+            // certain comparison operators. We also store its location later for later.
+            pivot_in_scratch = state.partition_one(pivot_goes_left);
 
-            if is_first_swap_pair {
-                gap_opt = Some(GapGuard {
-                    pos: right,
-                    value: ManuallyDrop::new(ptr::read(left)),
-                });
-            }
-
-            let gap = gap_opt.as_mut().unwrap_unchecked();
-
-            // Single place where we instantiate ptr::copy_nonoverlapping in the partition.
-            if !is_first_swap_pair {
-                ptr::copy_nonoverlapping(left, gap.pos, 1);
-            }
-            gap.pos = right;
-            ptr::copy_nonoverlapping(right, left, 1);
-
-            left = left.add(1);
+            loop_end_pos = len;
         }
 
-        left.sub_ptr(v_base)
+        // `pivot` must be copied into its correct position again, because a
+        // comparison operator might have modified it.
+        if has_direct_interior_mutability::<T>() {
+            ptr::copy_nonoverlapping(pivot, pivot_in_scratch, 1);
+        }
 
-        // `gap_opt` goes out of scope and overwrites the last wrong-side element on the right side
-        // with the first wrong-side element of the left side that was initially overwritten by the
-        // first wrong-side element on the right side.
+        // SAFETY: partition_one being called exactly len times guarantees that scratch
+        // is initialized with a permuted copy of `v`, and that num_left <= v.len().
+        // Copying scratch[0..num_left] and scratch[num_left..v.len()] back is thus
+        // sound, as the values in scratch will never be read again, meaning our copies
+        // semantically act as moves, permuting `v`.
+
+        // Copy all the elements < p directly from swap to v.
+        let v_base = v.as_mut_ptr();
+        ptr::copy_nonoverlapping(scratch_base, v_base, state.num_left);
+
+        // Copy the elements >= p in reverse order.
+        for i in 0..len - state.num_left {
+            ptr::copy_nonoverlapping(
+                scratch_base.add(len - 1 - i),
+                v_base.add(state.num_left + i),
+                1,
+            );
+        }
+
+        state.num_left
+    }
+}
+
+struct PartitionState<T> {
+    // The start of the scratch auxiliary memory.
+    scratch_base: *mut T,
+    // The current element that is being looked at, scans left to right through slice.
+    scan: *const T,
+    // Counts the number of elements that went to the left side, also works around:
+    // https://github.com/rust-lang/rust/issues/117128
+    num_left: usize,
+    // Reverse scratch output pointer.
+    scratch_rev: *mut T,
+}
+
+impl<T> PartitionState<T> {
+    /// # Safety
+    /// scan and scratch must point to valid disjoint buffers of length len. The
+    /// scan buffer must be initialized.
+    unsafe fn new(scan: *const T, scratch: *mut T, len: usize) -> Self {
+        Self {
+            scratch_base: scratch,
+            scan,
+            num_left: 0,
+            scratch_rev: scratch.add(len),
+        }
+    }
+
+    /// Depending on the value of `towards_left` this function will write a value
+    /// to the growing left or right side of the scratch memory. This forms the
+    /// branchless core of the partition.
+    ///
+    /// # Safety
+    /// This function may be called at most `len` times. If it is called exactly
+    /// `len` times the scratch buffer then contains a copy of each element from
+    /// the scan buffer exactly once - a permutation, and num_left <= len.
+    unsafe fn partition_one(&mut self, towards_left: bool) -> *mut T {
+        // SAFETY: see individual comments.
+        unsafe {
+            // SAFETY: in-bounds because this function is called at most len times, and thus
+            // right now is incremented at most len - 1 times. Similarly, num_left < len and
+            // num_right < len, where num_right == i - num_left at the start of the ith
+            // iteration (zero-indexed).
+            self.scratch_rev = self.scratch_rev.sub(1);
+
+            // SAFETY: now we have scratch_rev == base + len - (i + 1). This means
+            // scratch_rev + num_left == base + len - 1 - num_right < base + len.
+            let dst_base = if towards_left {
+                self.scratch_base
+            } else {
+                self.scratch_rev
+            };
+            let dst = dst_base.add(self.num_left);
+            ptr::copy_nonoverlapping(self.scan, dst, 1);
+
+            self.num_left += towards_left as usize;
+            self.scan = self.scan.add(1);
+            dst
+        }
     }
 }
 

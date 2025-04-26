@@ -169,6 +169,9 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     #[cfg(feature = "partition_research")]
     bench_inst!(unstable::rust_partition_research_5);
 
+    #[cfg(feature = "partition_research")]
+    bench_inst!(unstable::rust_partition_research_6);
+
     // PIVOTS
 
     #[cfg(feature = "pivot_research")]

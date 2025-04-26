@@ -22,6 +22,10 @@ pub mod rust_partition_research_4;
 #[cfg(feature = "partition_research")]
 pub mod rust_partition_research_5;
 
+// stable partition
+#[cfg(feature = "partition_research")]
+pub mod rust_partition_research_6;
+
 // median of 3
 #[cfg(feature = "pivot_research")]
 pub mod rust_pivot_research_1;
