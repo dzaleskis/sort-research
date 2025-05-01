@@ -54,11 +54,13 @@ fn bench_patterns<T: Ord + std::fmt::Debug>(
     transform_name: &str,
     transform: fn(Vec<i32>) -> Vec<T>,
 ) {
-    // if test_len > 1_000_000 && (transform_name == "f128" || transform_name == "1k") {
-    //     // These are just too expensive.
-    //     println!("Too expensive to benchmark");
-    //     return;
-    // }
+    if test_len > 1_000_000
+        && (transform_name == "f128" || transform_name == "1k" || transform_name == "string")
+    {
+        // These are just too expensive.
+        println!("Too expensive to benchmark");
+        return;
+    }
 
     let mut pattern_providers: Vec<(&'static str, fn(usize) -> Vec<i32>)> = vec![
         ("random", patterns::random),
@@ -67,7 +69,6 @@ fn bench_patterns<T: Ord + std::fmt::Debug>(
         ("random_p5", |len| random_x_percent(len, 5.0)),
         ("random_s95", |len| patterns::random_sorted(len, 95.0)),
         ("random_m50", |len| patterns::random_merge(len, 50.0)),
-        ("saws_short", |len| patterns::saw_mixed_range(len, 20..50)),
         // every tested algorithm handles these well, no reason to waste benchmark time on them
         // ("ascending", patterns::ascending),
         // ("descending", patterns::descending),
@@ -331,18 +332,16 @@ fn criterion_benchmark(c: &mut Criterion) {
             values.iter().map(|val| F128::new(*val)).collect()
         });
 
-        #[cfg(feature = "bench_type_rust_string")]
-        {
-            bench_patterns(c, test_len, "rust_string", |values| {
-                // Strings are compared lexicographically, so we zero extend them to maintain the input
-                // order.
-                // See: https://godbolt.org/z/M38zTK6nv and https://godbolt.org/z/G18Yb7zoE
-                values
-                    .iter()
-                    .map(|val| format!("{:010}", val.saturating_abs()))
-                    .collect()
-            });
-        }
+        // Branchy comparison function and contains data stored in heap.
+        bench_patterns(c, test_len, "string", |values| {
+            // Strings are compared lexicographically, so we zero extend them to maintain the input
+            // order.
+            // See: https://godbolt.org/z/M38zTK6nv and https://godbolt.org/z/G18Yb7zoE
+            values
+                .iter()
+                .map(|val| format!("{:010}", val.saturating_abs()))
+                .collect()
+        });
 
         #[cfg(feature = "bench_type_u8")]
         {
