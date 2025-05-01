@@ -180,26 +180,28 @@ where
         end = start;
 
         if runs.len() >= 1 {
-            let last_run = runs.last_mut().unwrap();
+            unsafe {
+                let last_run = runs.last_mut().unwrap_unchecked();
 
-            last_run.power = merge_tree_depth(
-                next_run.start,
-                last_run.start,
-                last_run.start + last_run.len,
-                len,
-            );
+                last_run.power = merge_tree_depth(
+                    next_run.start,
+                    last_run.start,
+                    last_run.start + last_run.len,
+                    len,
+                );
 
-            while runs.len() >= 2 && runs[runs.len() - 2].power > runs[runs.len() - 1].power {
-                if runs.len() >= 3 && runs[runs.len() - 2].power != runs[runs.len() - 3].power {
-                    merge_2_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
-                } else if runs.len() >= 4
-                    && runs[runs.len() - 2].power != runs[runs.len() - 4].power
-                {
-                    merge_3_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
-                } else if runs.len() >= 4 {
-                    merge_4_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
-                } else {
-                    break;
+                while runs.len() >= 2 && runs[runs.len() - 2].power > runs[runs.len() - 1].power {
+                    if runs.len() >= 3 && runs[runs.len() - 2].power != runs[runs.len() - 3].power {
+                        merge_2_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+                    } else if runs.len() >= 4
+                        && runs[runs.len() - 2].power != runs[runs.len() - 4].power
+                    {
+                        merge_3_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+                    } else if runs.len() >= 4 {
+                        merge_4_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+                    } else {
+                        break;
+                    }
                 }
             }
         }
@@ -207,76 +209,78 @@ where
         runs.push(next_run);
     }
 
-    if runs.len() % 3 == 0 && runs.len() >= 3 {
-        merge_3_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
-    } else if runs.len() % 3 == 2 {
-        merge_2_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
-    }
+    unsafe {
+        if runs.len() % 3 == 0 && runs.len() >= 3 {
+            merge_3_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+        } else if runs.len() % 3 == 2 {
+            merge_2_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+        }
 
-    // Merge remaining runs
-    while runs.len() >= 4 {
-        merge_4_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+        // Merge remaining runs
+        while runs.len() >= 4 {
+            merge_4_runs(v, buf.as_mut_ptr(), &mut runs, &mut is_less);
+        }
     }
 
     // Finally, exactly one run must remain in the stack.
     debug_assert!(runs.len() == 1 && runs[0].start == 0 && runs[0].len == len);
 
-    fn merge_2_runs<T, F>(v: &mut [T], buf: *mut T, runs: &mut Vec<Run>, is_less: &mut F)
+    unsafe fn merge_2_runs<T, F>(v: &mut [T], buf: *mut T, runs: &mut Vec<Run>, is_less: &mut F)
     where
         F: FnMut(&T, &T) -> bool,
     {
-        let mut run_1 = runs.pop().unwrap();
-        let run_2 = runs.pop().unwrap();
-        unsafe {
-            merge_2way(
-                &mut v[run_1.start..run_2.start + run_2.len],
-                run_1.len,
-                buf,
-                is_less,
-            );
-        }
+        let mut run_1 = runs.pop().unwrap_unchecked();
+        let run_2 = runs.pop().unwrap_unchecked();
+
+        merge_2way(
+            &mut v[run_1.start..run_2.start + run_2.len],
+            run_1.len,
+            buf,
+            is_less,
+        );
+
         run_1.len = run_1.len + run_2.len;
         runs.push(run_1);
     }
 
-    fn merge_3_runs<T, F>(v: &mut [T], buf: *mut T, runs: &mut Vec<Run>, is_less: &mut F)
+    unsafe fn merge_3_runs<T, F>(v: &mut [T], buf: *mut T, runs: &mut Vec<Run>, is_less: &mut F)
     where
         F: FnMut(&T, &T) -> bool,
     {
-        let mut run_1 = runs.pop().unwrap();
-        let run_2 = runs.pop().unwrap();
-        let run_3 = runs.pop().unwrap();
-        unsafe {
-            merge_3way(
-                &mut v[run_1.start..run_3.start + run_3.len],
-                run_1.len,
-                run_1.len + run_2.len,
-                buf,
-                is_less,
-            )
-        }
+        let mut run_1 = runs.pop().unwrap_unchecked();
+        let run_2 = runs.pop().unwrap_unchecked();
+        let run_3 = runs.pop().unwrap_unchecked();
+
+        merge_3way(
+            &mut v[run_1.start..run_3.start + run_3.len],
+            run_1.len,
+            run_1.len + run_2.len,
+            buf,
+            is_less,
+        );
+
         run_1.len = run_1.len + run_2.len + run_3.len;
         runs.push(run_1);
     }
 
-    fn merge_4_runs<T, F>(v: &mut [T], buf: *mut T, runs: &mut Vec<Run>, is_less: &mut F)
+    unsafe fn merge_4_runs<T, F>(v: &mut [T], buf: *mut T, runs: &mut Vec<Run>, is_less: &mut F)
     where
         F: FnMut(&T, &T) -> bool,
     {
-        let mut run_1 = runs.pop().unwrap();
-        let run_2 = runs.pop().unwrap();
-        let run_3 = runs.pop().unwrap();
-        let run_4 = runs.pop().unwrap();
-        unsafe {
-            merge_4way(
-                &mut v[run_1.start..run_4.start + run_4.len],
-                run_1.len,
-                run_1.len + run_2.len,
-                run_1.len + run_2.len + run_3.len,
-                buf,
-                is_less,
-            )
-        }
+        let mut run_1 = runs.pop().unwrap_unchecked();
+        let run_2 = runs.pop().unwrap_unchecked();
+        let run_3 = runs.pop().unwrap_unchecked();
+        let run_4 = runs.pop().unwrap_unchecked();
+
+        merge_4way(
+            &mut v[run_1.start..run_4.start + run_4.len],
+            run_1.len,
+            run_1.len + run_2.len,
+            run_1.len + run_2.len + run_3.len,
+            buf,
+            is_less,
+        );
+
         run_1.len = run_1.len + run_2.len + run_3.len + run_4.len;
         runs.push(run_1);
     }
