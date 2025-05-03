@@ -731,15 +731,7 @@ enum UnstalbeSmallSort {
 }
 
 const fn choose_unstable_small_sort<T: Freeze>() -> UnstalbeSmallSort {
-    if T::IS_COPY
-        && has_efficient_in_place_swap::<T>()
-        && (mem::size_of::<T>() * SMALL_SORT_NETWORK_SCRATCH_LEN) <= MAX_STACK_ARRAY_SIZE
-    {
-        // Heuristic for int like types.
-        return UnstalbeSmallSort::Network;
-    }
-
-    UnstalbeSmallSort::Fallback
+    UnstalbeSmallSort::Network
 }
 
 const fn inst_unstable_small_sort<T: Freeze, F: FnMut(&T, &T) -> bool>() -> fn(&mut [T], &mut F) {
@@ -790,7 +782,8 @@ where
     let mut stack_array = MaybeUninit::<[T; SMALL_SORT_NETWORK_SCRATCH_LEN]>::uninit();
 
     let len_div_2 = len / 2;
-    let no_merge = len < 18;
+    let no_merge =
+        len < 18 || mem::size_of::<T>() * SMALL_SORT_NETWORK_SCRATCH_LEN <= MAX_STACK_ARRAY_SIZE;
 
     let v_base = v.as_mut_ptr();
     let initial_region_len = if no_merge { len } else { len_div_2 };
