@@ -54,7 +54,7 @@ def run_benchmarks(test_name, bench_name_overwrite):
             "--warm-up-time",
             "1",
             "--measurement-time",
-            "5",
+            "3",
             "--sample-size",
             "20",
             "--noplot",
