@@ -488,11 +488,11 @@ unsafe fn merge_unguarded<T, F>(
 
     if left < src_mid {
         // the left run is unconsumed
-        let rem_len = src_mid.sub_ptr(left);
+        let rem_len = src_mid.offset_from_unsigned(left);
         ptr::copy_nonoverlapping(left, out, rem_len);
     } else {
         // the right run is unconsumed
-        let rem_len = src_end.sub_ptr(right);
+        let rem_len = src_end.offset_from_unsigned(right);
         ptr::copy_nonoverlapping(right, out, rem_len);
     }
 }

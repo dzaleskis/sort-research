@@ -234,9 +234,9 @@ pub fn choose_pivot<T, F: FnMut(&T, &T) -> bool>(v: &[T], is_less: &mut F) -> us
         let c = v_base.add(len_div_8 * 7); // [7*floor(n/8), 8*floor(n/8))
 
         if len < PSEUDO_MEDIAN_REC_THRESHOLD {
-            median3(&*a, &*b, &*c, is_less).sub_ptr(v_base)
+            median3(&*a, &*b, &*c, is_less).offset_from_unsigned(v_base)
         } else {
-            median3_rec(a, b, c, len_div_8, is_less).sub_ptr(v_base)
+            median3_rec(a, b, c, len_div_8, is_less).offset_from_unsigned(v_base)
         }
     }
 }
@@ -447,7 +447,7 @@ fn partition_lomuto_branchy<T, F: FnMut(&T, &T) -> bool>(
     // SAFETY: The bounded loop ensures that `right` is always in-bounds. `v` and `pivot` can't
     // alias because of type system rules. The left side element `left` can only be incremented once
     // per iteration, so it is <= `right` which makes it in-bounds as a transitive property. From
-    // this also follows that the call to `sub_ptr` at the end is safe.
+    // this also follows that the call to `offset_from_unsigned` at the end is safe.
     unsafe {
         let mut left = v_base;
 
@@ -461,7 +461,7 @@ fn partition_lomuto_branchy<T, F: FnMut(&T, &T) -> bool>(
             }
         }
 
-        left.sub_ptr(v_base)
+        left.offset_from_unsigned(v_base)
     }
 }
 

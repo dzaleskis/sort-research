@@ -230,9 +230,9 @@ pub fn choose_pivot<T, F: FnMut(&T, &T) -> bool>(v: &[T], is_less: &mut F) -> us
         let c = v_base.add(len - 1); // end
 
         if len < PSEUDO_MEDIAN_REC_THRESHOLD {
-            median3(a, b, c, is_less).sub_ptr(v_base)
+            median3(a, b, c, is_less).offset_from_unsigned(v_base)
         } else {
-            median9_full(a, b, c, is_less).sub_ptr(v_base)
+            median9_full(a, b, c, is_less).offset_from_unsigned(v_base)
         }
     }
 }
@@ -247,7 +247,7 @@ unsafe fn median9_full<T, F: FnMut(&T, &T) -> bool>(
     c: *const T,
     is_less: &mut F,
 ) -> *const T {
-    let n = c.sub_ptr(a) + 1;
+    let n = c.offset_from_unsigned(a) + 1;
     let n8 = n / 8;
 
     let m1 = median3(a, a.add(n8), a.add(n8 * 2), is_less);
@@ -528,7 +528,7 @@ where
             left = left.add(1);
         }
 
-        left.sub_ptr(v_base)
+        left.offset_from_unsigned(v_base)
 
         // `gap_opt` goes out of scope and overwrites the last wrong-side element on the right side
         // with the first wrong-side element of the left side that was initially overwritten by the
