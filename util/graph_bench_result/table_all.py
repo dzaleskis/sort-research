@@ -47,7 +47,7 @@ for ty in types:
             mean_results.append([ty, pattern, algo, mean_algo_runtime])
 
 all_mean_df = pd.DataFrame(mean_results, columns=['Type', 'Pattern', 'Algorithm', 'Mean runtime'])
-all_mean_df.to_csv(f"{prefix}_mean_benchmark_results.csv", index=False)
+# all_mean_df.to_csv(f"{prefix}_mean_benchmark_results.csv", index=False)
 
 for ty in types:
     type_df = all_mean_df[all_mean_df['Type'] == ty]
@@ -70,7 +70,7 @@ for ty in types:
             slowdown_results.append([ty, pattern, algo, slowdown_algo_runtime])
 
 all_slowdown_df = pd.DataFrame(slowdown_results, columns=['Type', 'Pattern', 'Algorithm', 'Average slowdown'])
-all_slowdown_df.to_csv(f"{prefix}_slowdown_benchmark_results.csv", index=False)
+# all_slowdown_df.to_csv(f"{prefix}_slowdown_benchmark_results.csv", index=False)
 
 # naudingiausia butu lentele, kur yra fiksuotas input type ir tada slowdownai kiekvieno algoritmo
 
