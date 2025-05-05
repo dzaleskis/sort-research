@@ -10,6 +10,8 @@ from bokeh import models
 from bokeh.plotting import figure, ColumnDataSource
 from bokeh.resources import CDN
 from bokeh.embed import file_html
+from bokeh.io import export_png
+from bokeh.models import FixedTicker
 
 from cpu_info import get_cpu_info
 from util import (
@@ -77,7 +79,6 @@ def extract_line(ty, sort_name, pattern, values):
 
     return x, y
 
-
 def plot_scaling(ty, prediction_state, pattern, values):
     plot_name = (
         f"{prediction_state}-{ty}-scaling-{pattern}{plot_name_suffix()}"
@@ -87,17 +88,19 @@ def plot_scaling(ty, prediction_state, pattern, values):
         x_axis_label="Input length (log)",
         x_axis_type="log",
         y_axis_label=f"Million elements per second | Higher is better | {CPU_INFO}",
-        width=1000,
-        height=600,
+        width=500,
+        height=500,
         tools="",
     )
-    add_tools_to_plot(plot)
+    # add_tools_to_plot(plot)
 
-    plot.add_layout(models.Legend(), "right")
+    plot.add_layout(models.Legend(location="top_right", orientation="vertical"), "center")
 
     sort_names = sorted(list(list(values.values())[0].values())[0].keys())
 
     y_max = 0
+    x_values = set()
+
     for sort_name in sort_names:
         is_new_sort = sort_name.endswith("_new")
 
@@ -110,6 +113,9 @@ def plot_scaling(ty, prediction_state, pattern, values):
         color, symbol = IMPL_META_INFO[effective_sort_name]
 
         y_max = max(y_max, max(y))
+
+        for x_val in x:
+             x_values.add(x_val)
 
         data = {"x": x, "y": y, "name": [sort_name] * len(x)}
         source = ColumnDataSource(data=data)
@@ -147,6 +153,10 @@ def plot_scaling(ty, prediction_state, pattern, values):
 
     plot.toolbar.logo = None
 
+    x_major = list(x_values)
+
+    plot.xaxis.ticker = FixedTicker(ticks=x_major)
+
     return plot_name, plot
 
 
@@ -172,6 +182,8 @@ def plot_patterns(groups):
                 html = file_html(plot, CDN, plot_name)
                 with open(f"{plot_name}.html", "w+") as outfile:
                     outfile.write(html)
+
+                export_png(plot, filename=f"{plot_name}.png")
 
 
 if __name__ == "__main__":
