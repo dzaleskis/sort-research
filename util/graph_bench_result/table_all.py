@@ -16,6 +16,8 @@ groups = parse_bench_results([filename])
 results = []
 mean_results = []
 slowdown_results = []
+type_slowdown_results = []
+algo_slowdown_results = []
 
 for ty, val1 in groups.items():
     for prediction_state, val2 in val1.items():
@@ -28,6 +30,7 @@ all_df = pd.DataFrame(results, columns=['Type', 'Size', 'Pattern', 'Algorithm', 
 # all_df.to_csv('all_benchmark_results.csv', index=False)
 
 types = set(all_df['Type'].values.tolist())
+algos = set(all_df['Algorithm'].values.tolist())
 
 for ty in types:
     type_df = all_df[all_df['Type'] == ty]
@@ -68,3 +71,27 @@ for ty in types:
 
 all_slowdown_df = pd.DataFrame(slowdown_results, columns=['Type', 'Pattern', 'Algorithm', 'Average slowdown'])
 all_slowdown_df.to_csv(f"{prefix}_slowdown_benchmark_results.csv", index=False)
+
+# naudingiausia butu lentele, kur yra fiksuotas input type ir tada slowdownai kiekvieno algoritmo
+
+for ty in types:
+    type_df = all_slowdown_df[all_slowdown_df['Type'] == ty]
+    algos = set(type_df['Algorithm'].values.tolist())
+
+    for algo in algos:
+        algo_df = type_df[type_df['Algorithm'] == algo]
+        algo_slowdowns = algo_df['Average slowdown'].values
+        algo_geom_mean_slowdown = np.exp(np.mean(np.log(algo_slowdowns)))
+        type_slowdown_results.append([ty, algo, algo_geom_mean_slowdown])
+
+type_slowdown_df = pd.DataFrame(type_slowdown_results, columns=['Type', 'Algorithm', 'Geometric average slowdown'])
+type_slowdown_df.to_csv(f"{prefix}_type_slowdown_benchmark_results.csv", index=False)
+
+for algo in algos:
+    algo_df = all_slowdown_df[all_slowdown_df['Algorithm'] == algo]
+    algo_slowdowns = algo_df['Average slowdown'].values
+    algo_geom_mean_slowdown = np.exp(np.mean(np.log(algo_slowdowns)))
+    algo_slowdown_results.append([algo, algo_geom_mean_slowdown])
+
+algo_slowdown_df = pd.DataFrame(algo_slowdown_results, columns=['Algorithm', 'Geometric average slowdown'])
+algo_slowdown_df.to_csv(f"{prefix}_algo_slowdown_benchmark_results.csv", index=False)
