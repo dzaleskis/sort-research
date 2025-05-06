@@ -491,7 +491,7 @@ fn qualifies_for_parity_merge<T>() -> bool {
     //   that must be observed after the sort operation concludes.
     //   Otherwise a type like Mutex<Option<Box<str>>> could lead to double free.
 
-    let is_small = mem::size_of::<T>() <= mem::size_of::<[usize; 2]>();
+    let is_small = mem::size_of::<T>() <= mem::size_of::<[usize; 16]>();
     let is_copy = T::is_copy();
 
     return is_small && is_copy;
