@@ -184,7 +184,7 @@ where
             let right = runs[r];
             let merge_slice = &mut v[left.start..right.start + right.len];
             unsafe {
-                if qualifies_for_parity_merge::<T>() {
+                if T::is_freeze() {
                     parity_merge_plus(merge_slice, left.len, buf_ptr, &mut is_less);
                     ptr::copy_nonoverlapping(buf_ptr, merge_slice.as_mut_ptr(), merge_slice.len());
                 } else {
@@ -434,44 +434,36 @@ where
     }
 }
 
-trait IsCopyMarker {}
+// // #[rustc_unsafe_specialization_marker]
+// trait Freeze {}
 
-impl<T: Copy> IsCopyMarker for T {}
+// Can the type have interior mutability, this is checked by testing if T is Freeze. If the type can
+// have interior mutability it may alter itself during comparison in a way that must be observed
+// after the sort operation concludes. Otherwise a type like Mutex<Option<Box<str>>> could lead to
+// double free.
+unsafe auto trait Freeze {}
 
-trait IsCopy {
-    fn is_copy() -> bool;
+impl<T: ?Sized> !Freeze for core::cell::UnsafeCell<T> {}
+unsafe impl<T: ?Sized> Freeze for core::marker::PhantomData<T> {}
+unsafe impl<T: ?Sized> Freeze for *const T {}
+unsafe impl<T: ?Sized> Freeze for *mut T {}
+unsafe impl<T: ?Sized> Freeze for &T {}
+unsafe impl<T: ?Sized> Freeze for &mut T {}
+
+trait IsFreeze {
+    fn is_freeze() -> bool;
 }
 
-impl<T> IsCopy for T {
-    default fn is_copy() -> bool {
+impl<T> IsFreeze for T {
+    default fn is_freeze() -> bool {
         false
     }
 }
 
-impl<T: IsCopyMarker> IsCopy for T {
-    fn is_copy() -> bool {
+impl<T: Freeze> IsFreeze for T {
+    fn is_freeze() -> bool {
         true
     }
-}
-
-// I would like to make this a const fn.
-#[inline]
-fn qualifies_for_parity_merge<T>() -> bool {
-    // This checks two things:
-    //
-    // - Type size: Is it ok to create 40 of them on the stack.
-    //
-    // - Can the type have interior mutability, this is checked by testing if T is Copy.
-    //   If the type can have interior mutability it may alter itself during comparison in a way
-    //   that must be observed after the sort operation concludes.
-    //   Otherwise a type like Mutex<Option<Box<str>>> could lead to double free.
-
-    T::is_copy()
-
-    // let is_small = mem::size_of::<T>() <= mem::size_of::<[usize; 2]>();
-    // let is_copy = T::is_copy();
-
-    // return is_small && is_copy;
 }
 
 #[inline]
