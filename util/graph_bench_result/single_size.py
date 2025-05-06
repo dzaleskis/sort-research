@@ -10,6 +10,7 @@ from bokeh.plotting import figure, ColumnDataSource
 from bokeh.resources import CDN
 from bokeh.embed import file_html
 from bokeh.models import FactorRange, LabelSet
+from bokeh.io import export_png
 
 from natsort import natsorted
 
@@ -98,7 +99,7 @@ def plot_single_size(ty, prediction_state, test_len, values):
         y_axis_label="Pattern",
         title=plot_name,
         tools="",
-        width=800,
+        width=600 + plot_height_extra,
         height=600 + plot_height_extra,
     )
 
@@ -142,6 +143,8 @@ def plot_sizes(groups):
                 html = file_html(plot, CDN, plot_name)
                 with open(f"{plot_name}.html", "w+") as outfile:
                     outfile.write(html)
+
+                export_png(plot, filename=f"{plot_name}.png")
 
 
 if __name__ == "__main__":

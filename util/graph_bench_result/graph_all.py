@@ -3,7 +3,7 @@ import sys
 import subprocess
 import shutil
 
-PLOTS = ["scaling", "single_size", "direct_versus"]
+PLOTS = ["scaling", "single_size"]
 
 from util import parse_skip
 
@@ -11,7 +11,7 @@ if __name__ == "__main__":
     this_dir = os.path.dirname(os.path.abspath(__file__))
     current_dir = os.path.abspath(os.getcwd())
     name = os.path.basename(sys.argv[1]).partition(".")[0]
-    analysis_dir = os.path.join(current_dir, f"analysis_{name}")
+    analysis_dir = os.path.join(current_dir, f"analysis/{name}")
 
     if os.path.exists(analysis_dir):
         shutil.rmtree(analysis_dir)

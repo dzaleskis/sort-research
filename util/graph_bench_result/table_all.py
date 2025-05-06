@@ -8,6 +8,7 @@ from util import (
     base_name,
     plot_name_suffix,
 )
+from operator import indexOf
 
 args = sys.argv[1:]
 filename = args[0]
@@ -63,7 +64,6 @@ for ty in types:
         for algo in algos:
             algo_df = pattern_df[pattern_df['Algorithm'] == algo]
             algo_runtimes = algo_df['Mean runtime'].values
-            print(algo_runtimes)
             assert(len(algo_runtimes) == 1)
 
             slowdown_algo_runtime = algo_runtimes[0] / best_algo_runtime
@@ -84,14 +84,23 @@ for ty in types:
         algo_geom_mean_slowdown = np.exp(np.mean(np.log(algo_slowdowns)))
         type_slowdown_results.append([ty, algo, algo_geom_mean_slowdown])
 
-type_slowdown_df = pd.DataFrame(type_slowdown_results, columns=['Type', 'Algorithm', 'Geometric average slowdown'])
-type_slowdown_df.to_csv(f"{prefix}_type_slowdown_benchmark_results.csv", index=False)
 
 for algo in algos:
     algo_df = all_slowdown_df[all_slowdown_df['Algorithm'] == algo]
     algo_slowdowns = algo_df['Average slowdown'].values
     algo_geom_mean_slowdown = np.exp(np.mean(np.log(algo_slowdowns)))
-    algo_slowdown_results.append([algo, algo_geom_mean_slowdown])
+    type_slowdown_results.append(['general', algo, algo_geom_mean_slowdown])
 
-algo_slowdown_df = pd.DataFrame(algo_slowdown_results, columns=['Algorithm', 'Geometric average slowdown'])
-algo_slowdown_df.to_csv(f"{prefix}_algo_slowdown_benchmark_results.csv", index=False)
+type_slowdown_df = pd.DataFrame(type_slowdown_results, columns=['Type', 'Algorithm', 'Geometric average slowdown'])
+type_slowdown_df_pivot = type_slowdown_df.pivot(index='Type', columns='Algorithm', values='Geometric average slowdown')
+type_slowdown_df_pivot.insert(0, 'Type', type_slowdown_df_pivot.index)
+
+types_order = ['u64', 'f128', '1k', 'string', 'general']
+def order_fn(x):
+    return types_order.index(x)
+
+vectorized_order_fn = np.vectorize(order_fn)
+reset_df = type_slowdown_df_pivot.reset_index(drop=True)
+result_df = reset_df.sort_values(by='Type', key=vectorized_order_fn)
+
+result_df.to_csv(f"tables/{prefix}_type_slowdown_benchmark_results.csv", index=False)

@@ -4,6 +4,8 @@
 
 # generated analysis html
 /analysis_*
+/analysis
+/tables
 # python environment
 /venv
 # benchmark output json
