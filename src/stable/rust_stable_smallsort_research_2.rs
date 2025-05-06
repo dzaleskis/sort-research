@@ -1,5 +1,6 @@
 #![allow(unused_unsafe)]
 
+use std::cmp;
 use std::cmp::Ordering;
 use std::mem::{self, size_of};
 use std::ptr;
@@ -133,7 +134,7 @@ where
     // shallow copies of the contents of `v` without risking the dtors running on copies if
     // `is_less` panics. When merging two sorted runs, this buffer holds a copy of the shorter run,
     // which will always have length at most `len / 2`.
-    let mut buf = Vec::with_capacity(len / 2);
+    let mut buf = Vec::with_capacity(cmp::max(len / 2, 32));
 
     // In order to identify natural runs in `v`, we traverse it backwards. That might seem like a
     // strange decision, but consider the fact that merges more often go in the opposite direction
@@ -163,7 +164,7 @@ where
 
         // Insert some more elements into the run if it's too short. Insertion sort is faster than
         // merge sort on short sequences, so this significantly improves performance.
-        start = provide_sorted_batch(v, start, end, &mut is_less);
+        start = provide_sorted_batch(v, start, end, buf.as_mut_ptr(), &mut is_less);
 
         // Push this run onto the stack.
         runs.push(Run {
@@ -305,7 +306,13 @@ where
     }
 }
 
-fn provide_sorted_batch<T, F>(v: &mut [T], mut start: usize, end: usize, is_less: &mut F) -> usize
+fn provide_sorted_batch<T, F>(
+    v: &mut [T],
+    mut start: usize,
+    end: usize,
+    buf: *mut T,
+    is_less: &mut F,
+) -> usize
 where
     F: FnMut(&T, &T) -> bool,
 {
@@ -321,12 +328,9 @@ where
     // merge sort on short sequences, so this significantly improves performance.
     let current_run_len = end - start;
 
-    if current_run_len < FAST_SORT_SIZE
-        && end >= FAST_SORT_SIZE
-        && qualifies_for_parity_merge::<T>()
-    {
+    if current_run_len < FAST_SORT_SIZE && end >= FAST_SORT_SIZE && T::is_freeze() {
         start = end - FAST_SORT_SIZE;
-        sort32_stable_network(&mut v[start..end], is_less);
+        sort32_stable_network(&mut v[start..end], buf, is_less);
     } else {
         while start > 0 && end - start < MIN_INSERTION_RUN {
             start -= 1;
@@ -459,42 +463,36 @@ where
     }
 }
 
-trait IsCopyMarker {}
+// // #[rustc_unsafe_specialization_marker]
+// trait Freeze {}
 
-impl<T: Copy> IsCopyMarker for T {}
+// Can the type have interior mutability, this is checked by testing if T is Freeze. If the type can
+// have interior mutability it may alter itself during comparison in a way that must be observed
+// after the sort operation concludes. Otherwise a type like Mutex<Option<Box<str>>> could lead to
+// double free.
+unsafe auto trait Freeze {}
 
-trait IsCopy {
-    fn is_copy() -> bool;
+impl<T: ?Sized> !Freeze for core::cell::UnsafeCell<T> {}
+unsafe impl<T: ?Sized> Freeze for core::marker::PhantomData<T> {}
+unsafe impl<T: ?Sized> Freeze for *const T {}
+unsafe impl<T: ?Sized> Freeze for *mut T {}
+unsafe impl<T: ?Sized> Freeze for &T {}
+unsafe impl<T: ?Sized> Freeze for &mut T {}
+
+trait IsFreeze {
+    fn is_freeze() -> bool;
 }
 
-impl<T> IsCopy for T {
-    default fn is_copy() -> bool {
+impl<T> IsFreeze for T {
+    default fn is_freeze() -> bool {
         false
     }
 }
 
-impl<T: IsCopyMarker> IsCopy for T {
-    fn is_copy() -> bool {
+impl<T: Freeze> IsFreeze for T {
+    fn is_freeze() -> bool {
         true
     }
-}
-
-// I would like to make this a const fn.
-#[inline]
-fn qualifies_for_parity_merge<T>() -> bool {
-    // This checks two things:
-    //
-    // - Type size: Is it ok to create 40 of them on the stack.
-    //
-    // - Can the type have interior mutability, this is checked by testing if T is Copy.
-    //   If the type can have interior mutability it may alter itself during comparison in a way
-    //   that must be observed after the sort operation concludes.
-    //   Otherwise a type like Mutex<Option<Box<str>>> could lead to double free.
-
-    let is_small = mem::size_of::<T>() <= mem::size_of::<[usize; 16]>();
-    let is_copy = T::is_copy();
-
-    return is_small && is_copy;
 }
 
 #[inline]
@@ -729,14 +727,13 @@ where
 }
 
 #[cfg_attr(feature = "no_inline_sub_functions", inline(never))]
-fn sort32_stable_network<T, F>(v: &mut [T], is_less: &mut F)
+fn sort32_stable_network<T, F>(v: &mut [T], buf: *mut T, is_less: &mut F)
 where
     F: FnMut(&T, &T) -> bool,
 {
-    assert!(v.len() == 32 && T::is_copy());
+    assert!(v.len() == 32 && T::is_freeze());
 
-    let mut swap = mem::MaybeUninit::<[T; 32]>::uninit();
-    let swap_ptr = swap.as_mut_ptr() as *mut T;
+    let swap_ptr = buf;
 
     // SAFETY: We checked the len for sort8 and that T is Copy and thus observation safe.
     // Should is_less panic v was not modified in parity_merge and retains it's original input.

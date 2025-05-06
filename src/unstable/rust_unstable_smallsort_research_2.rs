@@ -1278,33 +1278,6 @@ fn panic_on_ord_violation() -> ! {
     panic!("Ord violation");
 }
 
-#[must_use]
-const fn has_efficient_in_place_swap<T>() -> bool {
-    const MEM_SIZE_U64: usize = mem::size_of::<u64>();
-
-    mem::size_of::<T>() <= MEM_SIZE_U64
-}
-
-#[test]
-fn type_info() {
-    assert!(has_efficient_in_place_swap::<i32>());
-    assert!(has_efficient_in_place_swap::<u64>());
-    assert!(!has_efficient_in_place_swap::<u128>());
-    assert!(!has_efficient_in_place_swap::<String>());
-}
-
-trait IsCopy {
-    const IS_COPY: bool;
-}
-
-impl<T> IsCopy for T {
-    default const IS_COPY: bool = false;
-}
-
-impl<T: Copy> IsCopy for T {
-    const IS_COPY: bool = true;
-}
-
 /// Sorts `v` using heapsort, which guarantees *O*(*n* \* log(*n*)) worst-case.
 ///
 /// Never inline this, it sits the main hot-loop in `recurse` and is meant as unlikely algorithmic
