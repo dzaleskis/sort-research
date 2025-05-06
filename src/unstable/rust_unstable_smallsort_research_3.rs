@@ -731,7 +731,7 @@ const SMALL_SORT_GENERAL_SCRATCH_LEN: usize = SMALL_SORT_GENERAL_THRESHOLD + 16;
 /// Using a stack array, could cause a stack overflow if the type `T` is very large. To be
 /// conservative we limit the usage of small-sorts that require a stack array to types that fit
 /// within this limit.
-const MAX_STACK_ARRAY_SIZE: usize = 4096;
+const MAX_STACK_ARRAY_SIZE: usize = 8192;
 
 enum UnstalbeSmallSort {
     Fallback,

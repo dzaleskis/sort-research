@@ -98,7 +98,7 @@ impl Drop for FFIString {
     }
 }
 
-// Very large stack value.
+// Very large stack value (128 bytes).
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct FFIOneKibiBit {
