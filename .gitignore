@@ -7,6 +7,7 @@
 /analysis
 /tables
 /combined_analysis
+/selected_analysis
 # python environment
 /venv
 # benchmark output json
