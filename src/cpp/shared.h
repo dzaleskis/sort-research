@@ -20,7 +20,7 @@ struct F128 {
   double y;
 };
 
-struct FFIOneKibiByte {
+struct FFIOneKibiBit {
   int64_t values[128];
 };
 }
@@ -115,7 +115,7 @@ struct F128Cpp : public F128 {
   }
 };
 
-struct FFIOneKiloByteCpp : public FFIOneKibiByte {
+struct FFIOneKiloByteCpp : public FFIOneKibiBit {
   int64_t as_i64() const noexcept {
     return values[11] + values[55] + values[77];
   }

@@ -86,16 +86,16 @@ uint32_t gerbens_qsort_unstable_f128_by(F128* data,
 
 // --- 1k ---
 
-void gerbens_qsort_unstable_1k(FFIOneKibiByte* data, size_t len) {
+void gerbens_qsort_unstable_1k(FFIOneKibiBit* data, size_t len) {
   exp_gerbens::QuickSort(reinterpret_cast<FFIOneKiloByteCpp*>(data),
                          reinterpret_cast<FFIOneKiloByteCpp*>(data) + len);
 }
 
 uint32_t gerbens_qsort_unstable_1k_by(
-    FFIOneKibiByte* data,
+    FFIOneKibiBit* data,
     size_t len,
-    CompResult (*cmp_fn)(const FFIOneKibiByte&,
-                         const FFIOneKibiByte&,
+    CompResult (*cmp_fn)(const FFIOneKibiBit&,
+                         const FFIOneKibiBit&,
                          uint8_t*),
     uint8_t* ctx) {
   return sort_by_impl(reinterpret_cast<FFIOneKiloByteCpp*>(data), len, cmp_fn,

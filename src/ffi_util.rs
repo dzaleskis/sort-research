@@ -60,7 +60,7 @@ macro_rules! ffi_sort_impl {
     ) => {
         use std::cmp::Ordering;
 
-        use sort_test_tools::ffi_types::{CompResult, FFIOneKibiByte, FFIString, F128};
+        use sort_test_tools::ffi_types::{CompResult, FFIOneKibiBit, FFIString, F128};
 
         sort_impl!($name);
 
@@ -94,11 +94,11 @@ macro_rules! ffi_sort_impl {
                     cmp_fn: unsafe extern "C" fn(&F128, &F128, *mut u8) -> CompResult,
                     cmp_fn_ctx: *mut u8,
                 ) -> u32;
-                fn [<$sort_name_prefix _1k>](data: *mut FFIOneKibiByte, len: usize);
+                fn [<$sort_name_prefix _1k>](data: *mut FFIOneKibiBit, len: usize);
                 fn [<$sort_name_prefix _1k_by>](
-                    data: *mut FFIOneKibiByte,
+                    data: *mut FFIOneKibiBit,
                     len: usize,
-                    cmp_fn: unsafe extern "C" fn(&FFIOneKibiByte, &FFIOneKibiByte, *mut u8) -> CompResult,
+                    cmp_fn: unsafe extern "C" fn(&FFIOneKibiBit, &FFIOneKibiBit, *mut u8) -> CompResult,
                     cmp_fn_ctx: *mut u8,
                 ) -> u32;
             }
@@ -166,7 +166,7 @@ macro_rules! ffi_sort_impl {
                 }
             }
 
-            impl CppSort for FFIOneKibiByte {
+            impl CppSort for FFIOneKibiBit {
                 fn sort(data: &mut [Self]) {
                     unsafe {
                         [<$sort_name_prefix _1k>](data.as_mut_ptr(), data.len());

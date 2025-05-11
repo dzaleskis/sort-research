@@ -1,6 +1,6 @@
 # ipnsort: an efficient, generic and robust unstable sort implementation.
 
-Authors: Lukas Bergdoll @Voultapher and Orson Peters @orlp  
+Authors: Lukas Bergdoll @Voultapher and Orson Peters @orlp
 Date: 2024-04-16 (YYYY-MM-DD)
 
 This document explains and verifies the design goals for an efficient, generic and robust unstable sort implementation called ipnsort by Lukas Bergdoll and Orson Peters ([source code](https://github.com/Voultapher/sort-research-rs/tree/ipnsort-writeup/ipnsort)).
@@ -310,11 +310,11 @@ The 1k type simulates a type that is expensive to copy at 1KiB, but has a relati
 // Very large stack value.
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone)]
-pub struct FFIOneKibiByte {
+pub struct FFIOneKibiBit {
     values: [i64; 128],
 }
 
-impl FFIOneKibiByte {
+impl FFIOneKibiBit {
     pub fn new(val: i32) -> Self {
         let mut values = [0i64; 128];
         let mut val_i64 = val as i64;
@@ -331,7 +331,7 @@ impl FFIOneKibiByte {
     }
 }
 
-impl PartialOrd for FFIOneKibiByte {
+impl PartialOrd for FFIOneKibiBit {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.as_i64().partial_cmp(&other.as_i64())
     }

@@ -85,12 +85,12 @@ IMPL(unstable, i32, int32_t, UnstableSortI32);
 IMPL(unstable, u64, uint64_t, UnstableSortU64);
 NOT_IMPL(unstable, ffi_string, FFIString);
 NOT_IMPL(unstable, f128, F128);
-NOT_IMPL(unstable, 1k, FFIOneKibiByte);
+NOT_IMPL(unstable, 1k, FFIOneKibiBit);
 
 IMPL(stable, i32, int32_t, StableSortI32);
 IMPL(stable, u64, uint64_t, StableSortU64);
 NOT_IMPL(stable, ffi_string, FFIString);
 NOT_IMPL(stable, f128, F128);
-NOT_IMPL(stable, 1k, FFIOneKibiByte);
+NOT_IMPL(stable, 1k, FFIOneKibiBit);
 
 }  // extern "C"

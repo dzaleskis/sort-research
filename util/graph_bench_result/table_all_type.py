@@ -84,13 +84,6 @@ for ty in types:
         algo_geom_mean_slowdown = np.exp(np.mean(np.log(algo_slowdowns)))
         type_slowdown_results.append([ty, algo, algo_geom_mean_slowdown])
 
-
-for algo in algos:
-    algo_df = all_slowdown_df[all_slowdown_df['Algorithm'] == algo]
-    algo_slowdowns = algo_df['Average slowdown'].values
-    algo_geom_mean_slowdown = np.exp(np.mean(np.log(algo_slowdowns)))
-    type_slowdown_results.append(['general', algo, algo_geom_mean_slowdown])
-
 type_slowdown_df = pd.DataFrame(type_slowdown_results, columns=['Type', 'Algorithm', 'Geometric average slowdown'])
 type_slowdown_df_pivot = type_slowdown_df.pivot(index='Type', columns='Algorithm', values='Geometric average slowdown')
 type_slowdown_df_pivot.insert(0, 'Type', type_slowdown_df_pivot.index)
@@ -100,7 +93,7 @@ def order_fn(x):
     return types_order.index(x)
 
 vectorized_order_fn = np.vectorize(order_fn)
-reset_df = type_slowdown_df_pivot.reset_index(drop=True)
-result_df = reset_df.sort_values(by='Type', key=vectorized_order_fn)
+result_df = type_slowdown_df_pivot.reset_index(drop=True)
+result_df = result_df.sort_values(by='Type', key=vectorized_order_fn)
 
-result_df.to_csv(f"tables/{prefix}_type_slowdown_benchmark_results.csv", index=False)
+result_df.to_csv(f"tables/{prefix}_type_slowdown_benchmark_results.csv", float_format='%.2f', index=False)

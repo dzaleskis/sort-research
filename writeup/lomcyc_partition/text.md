@@ -694,11 +694,11 @@ The 1k type simulates a type that is expensive to copy at 1KiB, but has a relati
 // Very large stack value.
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone)]
-pub struct FFIOneKibiByte {
+pub struct FFIOneKibiBit {
     values: [i64; 128],
 }
 
-impl FFIOneKibiByte {
+impl FFIOneKibiBit {
     pub fn new(val: i32) -> Self {
         let mut values = [0i64; 128];
         let mut val_i64 = val as i64;
@@ -715,7 +715,7 @@ impl FFIOneKibiByte {
     }
 }
 
-impl PartialOrd for FFIOneKibiByte {
+impl PartialOrd for FFIOneKibiBit {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.as_i64().partial_cmp(&other.as_i64())
     }
@@ -729,7 +729,7 @@ Observations:
 - The results for the 1k type show completely different characteristics compared to the other tested types.
 - hoare_branchy and hoare_block have the best performance, because they perform a minimal amount of element copies.
 - hoare_crumsort combines block generation and block swapping into the same loop, using the input itself as temporary storage for the cyclic permutation. This involves copying the value comparatively often, and subsequently it is at the bottom of the performance ranking.
-- lomuto_branchless_cyclic performs better than lomuto_branchless_cyclic_opt despite them being very similar and the speedup usually being the other way around. They both perform one `ptr::copy_nonoverlapping` which translates to a call to `memcpy` for `FFIOneKibiByte`, and each performs one `ptr::copy` each loop iteration, which translates to a call to `memmove`. With lomuto_branchless_cyclic the chance that `ptr::copy` will copy the same value on-top of itself are relatively high as seen in the visualization. `memmove` can early return if the source and destination address are the same.
+- lomuto_branchless_cyclic performs better than lomuto_branchless_cyclic_opt despite them being very similar and the speedup usually being the other way around. They both perform one `ptr::copy_nonoverlapping` which translates to a call to `memcpy` for `FFIOneKibiBit`, and each performs one `ptr::copy` each loop iteration, which translates to a call to `memmove`. With lomuto_branchless_cyclic the chance that `ptr::copy` will copy the same value on-top of itself are relatively high as seen in the visualization. `memmove` can early return if the source and destination address are the same.
 
 #### Type introspection in ipnsort
 

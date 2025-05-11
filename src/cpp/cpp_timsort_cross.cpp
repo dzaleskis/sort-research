@@ -86,14 +86,14 @@ uint32_t timsort_stable_cross_f128_by(F128* data,
 
 // --- 1k ---
 
-void timsort_stable_cross_1k(FFIOneKibiByte* data, size_t len) {
+void timsort_stable_cross_1k(FFIOneKibiBit* data, size_t len) {
     printf("Not supported\n");
 }
 
-uint32_t timsort_stable_cross_1k_by(FFIOneKibiByte* data,
+uint32_t timsort_stable_cross_1k_by(FFIOneKibiBit* data,
                                 size_t len,
-                                CompResult (*cmp_fn)(const FFIOneKibiByte&,
-                                                     const FFIOneKibiByte&,
+                                CompResult (*cmp_fn)(const FFIOneKibiBit&,
+                                                     const FFIOneKibiBit&,
                                                      uint8_t*),
                                 uint8_t* ctx) {
     printf("Not supported\n");
