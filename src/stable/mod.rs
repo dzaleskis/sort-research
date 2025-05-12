@@ -1,5 +1,8 @@
 pub mod rust_std;
 
+#[cfg(feature = "max_mergesort")]
+pub mod rust_max_mergesort;
+
 #[cfg(feature = "rust_std_vendored")]
 pub mod rust_std_vendored;
 
@@ -54,6 +57,11 @@ pub mod cpp_wikisort;
 // Note, this sort is only stable if the the supplied comparison returns less, equal and more.
 #[cfg(feature = "c_fluxsort")]
 pub mod c_fluxsort;
+
+// Call quadsort sort via FFI.
+// Note, this sort is only stable if the the supplied comparison returns less, equal and more.
+#[cfg(feature = "c_quadsort")]
+pub mod c_quadsort;
 
 // Call golang slices.SortStable
 #[cfg(feature = "golang_std")]

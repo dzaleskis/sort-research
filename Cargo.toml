@@ -79,6 +79,8 @@ default = [
     # "bench_type_f32_total",
     # "bench_type_f64_total",
 
+
+    "max_mergesort",
     # "partition_research",
     # "pivot_research",
     # "unstable_smallsort_research",
@@ -108,6 +110,7 @@ default = [
     # "c_std_sys",
     # "c_crumsort",
     # "c_fluxsort",
+    "c_quadsort",
     # "singeli_singelisort",
     # "golang_std",
     # PREVIOUS RUST IMPL
@@ -123,6 +126,15 @@ default = [
     # "rust_grailsort",
     # "rust_afsort",
 ]
+
+# Enable support for max merge sort.
+max_mergesort = []
+
+# Enable support for max quicksort.
+max_quicksort = []
+
+# Enable support for max quicksort/mergesort hybrid.
+max_synergystic_sort = []
 
 # Enable support for partition research prototypes.
 partition_research = []
@@ -216,6 +228,10 @@ c_crumsort = []
 # Enable fluxsort by Igor van den Hoven.
 # Uses system C++ standard lib.
 c_fluxsort = []
+
+# Enable quadsort by Igor van den Hoven.
+# Uses system C++ standard lib.
+c_quadsort = []
 
 # Enable SingeliSort by Marshall Lochbaum.
 # Uses system C++ standard lib.

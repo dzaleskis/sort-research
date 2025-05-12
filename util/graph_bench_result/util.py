@@ -217,6 +217,7 @@ def build_implementation_meta_info():
     meta_info = {
         # Stable
         "c_fluxsort_stable": (palette[0], "square"),
+        "c_quadsort_stable": (palette[0], "square"),
         "cpp_std_sys_stable": (palette[1], "square"),
         "cpp_std_gnu_stable": (palette[1], "square"),
         "cpp_std_msvc_stable": (palette[1], "square"),
@@ -225,13 +226,14 @@ def build_implementation_meta_info():
         "rust_glidesort_stable": (palette[3], "triangle"),
         "rust_ipn_stable": (palette[7], "square"),
         "cpp_std_libcxx_stable": (palette[4], "square"),
-        "cpp_timsort_stable_og": (palette[5], "square"),
+        "cpp_timsort_stable": (palette[5], "square"),
         "cpp_timsort_stable_cross": (palette[6], "square"),
         "cpp_powersort_stable": (palette[6], "square"),
         "cpp_powersort_4way_stable": (palette[7], "square"),
         "rust_wpwoodjr_stable": (palette[7], "square"),
         "rust_tinymergesort_stable": (palette[7], "square"),
         "rust_driftsort_stable": (palette[6], "circle"),
+        "rust_max_mergesort_stable": (palette[2], "circle"),
         # Unstable
         "c_crumsort_unstable": (palette[0], "square"),
         "cpp_std_sys_unstable": (palette[1], "square"),
