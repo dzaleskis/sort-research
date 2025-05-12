@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-sort_impl!("rust_driftsort_stable");
+sort_impl!("rust_driftsort_synergistic");
 
 pub fn sort<T: Ord>(data: &mut [T]) {
     driftsort::sort(data);

@@ -629,6 +629,7 @@ dependencies = [
  "rand",
  "regex",
  "sort_test_tools",
+ "sysort",
  "tiny_sort",
  "zipf",
 ]
@@ -651,6 +652,10 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "sysort"
+version = "0.1.0"
 
 [[package]]
 name = "tiny_sort"

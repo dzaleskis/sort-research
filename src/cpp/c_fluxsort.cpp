@@ -1,5 +1,6 @@
 #include "thirdparty/scandum/fluxsort.h"
 
+#include <cstdlib>
 #include <stdexcept>
 
 #include <stdint.h>
@@ -55,8 +56,21 @@ uint32_t fluxsort_stable_u64_by(uint64_t* data,
 // --- ffi_string ---
 
 void fluxsort_stable_ffi_string(FFIString* data, size_t len) {
-  // Value would have to be sorted by indirection.
-  printf("Not supported\n");
+    FFIString** ptrArray = static_cast<FFIString**>(malloc(sizeof(FFIString*) * len));
+    for (int i = 0; i < len; i++) {
+        ptrArray[i] = &data[i];
+    }
+
+    fluxsort(static_cast<void*>(ptrArray), len, sizeof(FFIString*), indirect_c_cmp_func<FFIStringCpp>);
+
+    FFIString* outArray = static_cast<FFIString*>(malloc(sizeof(FFIString) * len));
+    for (int i = 0; i < len; i++) {
+        outArray[i] = *ptrArray[i];
+    }
+
+    for (int i = 0; i < len; i++) {
+        data[i] = outArray[i];
+    }
 }
 
 uint32_t fluxsort_stable_ffi_string_by(FFIString* data,
@@ -72,8 +86,21 @@ uint32_t fluxsort_stable_ffi_string_by(FFIString* data,
 // --- f128 ---
 
 void fluxsort_stable_f128(F128* data, size_t len) {
-  // Swaps values incorrectly, or my implementation is wrong.
-  printf("Not supported\n");
+  F128** ptrArray = static_cast<F128**>(malloc(sizeof(F128*) * len));
+  for (int i = 0; i < len; i++) {
+      ptrArray[i] = &data[i];
+  }
+
+  fluxsort(static_cast<void*>(ptrArray), len, sizeof(F128*), indirect_c_cmp_func<F128Cpp>);
+
+  F128* outArray = static_cast<F128*>(malloc(sizeof(F128) * len));
+  for (int i = 0; i < len; i++) {
+      outArray[i] = *ptrArray[i];
+  }
+
+  for (int i = 0; i < len; i++) {
+      data[i] = outArray[i];
+  }
 }
 
 uint32_t fluxsort_stable_f128_by(F128* data,
@@ -89,8 +116,21 @@ uint32_t fluxsort_stable_f128_by(F128* data,
 // --- 1k ---
 
 void fluxsort_stable_1k(FFIOneKibiBit* data, size_t len) {
-  // Value would have to be sorted by indirection.
-  printf("Not supported\n");
+    FFIOneKibiBit** ptrArray = static_cast<FFIOneKibiBit**>(malloc(sizeof(FFIOneKibiBit*) * len));
+    for (int i = 0; i < len; i++) {
+        ptrArray[i] = &data[i];
+    }
+
+    fluxsort(static_cast<void*>(ptrArray), len, sizeof(FFIOneKibiBit*), indirect_c_cmp_func<FFIOneKiloByteCpp>);
+
+    FFIOneKibiBit* outArray = static_cast<FFIOneKibiBit*>(malloc(sizeof(FFIOneKibiBit) * len));
+    for (int i = 0; i < len; i++) {
+        outArray[i] = *ptrArray[i];
+    }
+
+    for (int i = 0; i < len; i++) {
+        data[i] = outArray[i];
+    }
 }
 
 uint32_t fluxsort_stable_1k_by(FFIOneKibiBit* data,

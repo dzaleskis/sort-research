@@ -29,7 +29,8 @@ introsort = { version = "0.6", default-features = false, optional = true }
 afsort = { version = "0.3", default-features = false, optional = true }
 sort_test_tools = { path = "sort_test_tools", default-features = false }
 ipnsort = { path = "ipnsort", default-features = false }
-driftsort = { path = "../driftsort", optional = true }
+sysort = { path = "sysort", default-features = false }
+driftsort = { path = "driftsort", optional = true }
 
 [dev-dependencies]
 rand = "0.8"
@@ -82,6 +83,7 @@ default = [
 
     "max_mergesort",
     "max_quicksort",
+    "max_synergistic_sort",
     # "partition_research",
     # "pivot_research",
     # "unstable_smallsort_research",
@@ -110,7 +112,7 @@ default = [
     # "cpp_wikisort",
     # "c_std_sys",
     # "c_crumsort",
-    # "c_fluxsort",
+    "c_fluxsort",
     "c_quadsort",
     # "singeli_singelisort",
     # "golang_std",
@@ -119,8 +121,8 @@ default = [
     # "rust_wpwoodjr",
     # "rust_radsort",
     # "rust_dmsort",
-    # "rust_glidesort",
-    # "rust_driftsort",
+    "rust_glidesort",
+    "rust_driftsort",
     # "rust_crumsort_rs",
     # "rust_tinysort",
     # "rust_introsort",
@@ -135,7 +137,7 @@ max_mergesort = []
 max_quicksort = []
 
 # Enable support for max quicksort/mergesort hybrid.
-max_synergystic_sort = []
+max_synergistic_sort = []
 
 # Enable support for partition research prototypes.
 partition_research = []

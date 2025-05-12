@@ -437,8 +437,8 @@ where
 }
 
 const fn inst_partition<T, F: FnMut(&T, &T) -> bool>() -> fn(&mut [T], &T, &mut F) -> usize {
-    const MAX_BRANCHLESS_PARTITION_SIZE: usize = 96;
-    if mem::size_of::<T>() <= MAX_BRANCHLESS_PARTITION_SIZE {
+    const MAX_LOMUTO_PARTITION_SIZE: usize = 32;
+    if mem::size_of::<T>() <= MAX_LOMUTO_PARTITION_SIZE {
         // Specialize for types that are relatively cheap to copy, where branchless optimizations
         // have large leverage e.g. `u64` and `String`.
         partition_lomuto_branchless_cyclic::<T, F>

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# types=("stable" "unstable")
-types=("unstable")
+# types=("stable" "unstable" "synergistic")
+types=("synergistic")
 
 for type in "${types[@]}"
 do
