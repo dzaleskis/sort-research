@@ -1,6 +1,6 @@
 #!/bin/bash
 
-types=("pivot" "partition" "unstable_smallsort" "merge_policy" "merge_routine" "stable_smallsort")
+types=("stable")
 
 for type in "${types[@]}"
 do
