@@ -156,6 +156,9 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     #[cfg(feature = "max_mergesort")]
     bench_inst!(stable::rust_max_mergesort);
 
+    #[cfg(feature = "max_quicksort")]
+    bench_inst!(unstable::rust_max_quicksort);
+
     // --- Unstable sorts ---
 
     // PARTITIONS

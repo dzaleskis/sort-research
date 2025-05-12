@@ -245,6 +245,7 @@ def build_implementation_meta_info():
         "cpp_std_libcxx_unstable": (palette[4], "square"),
         "rust_ipn_unstable": (palette[5], "square"),
         "rust_ipnsort_unstable": (palette[0], "circle"),
+        "rust_max_quicksort_unstable": (palette[2], "circle"),
 
         "partition_hoare_branchy_cyclic": (palette[1], "circle"),
         "partition_hoare_branchless_block": (palette[2], "circle"),

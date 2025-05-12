@@ -81,19 +81,20 @@ default = [
 
 
     "max_mergesort",
+    "max_quicksort",
     # "partition_research",
     # "pivot_research",
     # "unstable_smallsort_research",
     # "merge_policy_research",
     # "merge_routine_research",
     # "stable_smallsort_research",
-    # "rust_ipnsort",
+    "rust_ipnsort",
     # ALREADY INCLUDES DRIFTSORT AND IPNSORT
     # "rust_std_sys",
     "cpp_std_sys",
     # "cpp_std_libcxx",
     # "cpp_std_gcc4_3",
-    # "cpp_pdqsort",
+    "cpp_pdqsort",
     "cpp_timsort",
     "cpp_powersort",
     # DOES NOT WORK ON M1

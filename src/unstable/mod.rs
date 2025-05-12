@@ -112,3 +112,7 @@ pub mod cpp_std_gcc4_3;
 // Call golang slices.Sort
 #[cfg(feature = "golang_std")]
 pub mod golang_std;
+
+// Call max quicksort
+#[cfg(feature = "max_quicksort")]
+pub mod rust_max_quicksort;

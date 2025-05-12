@@ -1,6 +1,7 @@
 #!/bin/bash
 
-types=("stable")
+# types=("stable" "unstable")
+types=("unstable")
 
 for type in "${types[@]}"
 do
