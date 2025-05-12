@@ -8,10 +8,6 @@
 
 #include "shared.h"
 
-// // timsort is implemented in a way that requires that T implements a default
-// // constructor. That's incompatible with move only types such as FFIStringCpp.
-// #define SORT_INCOMPATIBLE_WITH_SEMANTIC_CPP_TYPE
-
 template <typename T, typename F>
 uint32_t sort_by_impl(T* data, size_t len, F cmp_fn, uint8_t* ctx) noexcept {
   try {

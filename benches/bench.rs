@@ -69,9 +69,8 @@ fn bench_patterns<T: Ord + std::fmt::Debug>(
         ("random_p5", |len| random_x_percent(len, 5.0)),
         ("random_s95", |len| patterns::random_sorted(len, 95.0)),
         ("random_m50", |len| patterns::random_merge(len, 50.0)),
-        // every tested algorithm handles these well, no reason to waste benchmark time on them
-        // ("ascending", patterns::ascending),
-        // ("descending", patterns::descending),
+        ("ascending", patterns::ascending),
+        ("descending", patterns::descending),
     ];
 
     // Custom patterns designed to find worst case performance.
@@ -340,6 +339,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             values
                 .iter()
                 .map(|val| format!("{:010}", val.saturating_abs()))
+                .map(|val| FFIString::new((*val).to_string()))
                 .collect()
         });
 

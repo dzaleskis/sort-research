@@ -229,25 +229,13 @@ int int_cmp_func(const void* a_ptr, const void* b_ptr) {
   return (is_less * -1) + (is_more * 1);
 }
 
-int f128_c_cmp_func(const void* a_ptr, const void* b_ptr) {
-  const F128Cpp* a_p = *(F128Cpp **)(a_ptr);
-  const F128Cpp* b_p = *(F128Cpp **)(b_ptr);
-  const F128Cpp a = *a_p;
-  const F128Cpp b = *b_p;
+template <typename T>
+int indirect_c_cmp_func(const void* a_ptr, const void* b_ptr) {
+  const T* a = *(T **)(a_ptr);
+  const T* b = *(T **)(b_ptr);
 
-  const int is_less = a < b;
-  const bool is_more = a > b;
-  return (is_less * -1) + (is_more * 1);
-}
-
-int onek_c_cmp_func(const void* a_ptr, const void* b_ptr) {
-  const FFIOneKiloByteCpp* a_p = *(FFIOneKiloByteCpp **)(a_ptr);
-  const FFIOneKiloByteCpp* b_p = *(FFIOneKiloByteCpp **)(b_ptr);
-  const FFIOneKiloByteCpp a = *a_p;
-  const FFIOneKiloByteCpp b = *b_p;
-
-  const int is_less = a < b;
-  const bool is_more = a > b;
+  const int is_less = *a < *b;
+  const bool is_more = *a > *b;
   return (is_less * -1) + (is_more * 1);
 }
 

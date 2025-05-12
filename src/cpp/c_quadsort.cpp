@@ -56,8 +56,21 @@ uint32_t quadsort_stable_u64_by(uint64_t* data,
 // --- ffi_string ---
 
 void quadsort_stable_ffi_string(FFIString* data, size_t len) {
-  // Value would have to be sorted by indirection.
-  printf("Not supported\n");
+    FFIString** ptrArray = static_cast<FFIString**>(malloc(sizeof(FFIString*) * len));
+    for (int i = 0; i < len; i++) {
+        ptrArray[i] = &data[i];
+    }
+
+    quadsort(static_cast<void*>(ptrArray), len, sizeof(FFIString*), indirect_c_cmp_func<FFIStringCpp>);
+
+    FFIString* outArray = static_cast<FFIString*>(malloc(sizeof(FFIString) * len));
+    for (int i = 0; i < len; i++) {
+        outArray[i] = *ptrArray[i];
+    }
+
+    for (int i = 0; i < len; i++) {
+        data[i] = outArray[i];
+    }
 }
 
 uint32_t quadsort_stable_ffi_string_by(FFIString* data,
@@ -78,7 +91,7 @@ void quadsort_stable_f128(F128* data, size_t len) {
       ptrArray[i] = &data[i];
   }
 
-  quadsort(static_cast<void*>(ptrArray), len, sizeof(F128*), f128_c_cmp_func);
+  quadsort(static_cast<void*>(ptrArray), len, sizeof(F128*), indirect_c_cmp_func<F128Cpp>);
 
   F128* outArray = static_cast<F128*>(malloc(sizeof(F128) * len));
   for (int i = 0; i < len; i++) {
@@ -108,7 +121,7 @@ void quadsort_stable_1k(FFIOneKibiBit* data, size_t len) {
         ptrArray[i] = &data[i];
     }
 
-    quadsort(static_cast<void*>(ptrArray), len, sizeof(FFIOneKibiBit*), onek_c_cmp_func);
+    quadsort(static_cast<void*>(ptrArray), len, sizeof(FFIOneKibiBit*), indirect_c_cmp_func<FFIOneKiloByteCpp>);
 
     FFIOneKibiBit* outArray = static_cast<FFIOneKibiBit*>(malloc(sizeof(FFIOneKibiBit) * len));
     for (int i = 0; i < len; i++) {
