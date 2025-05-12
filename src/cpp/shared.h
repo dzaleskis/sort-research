@@ -21,7 +21,7 @@ struct F128 {
 };
 
 struct FFIOneKibiBit {
-  int64_t values[128];
+  int64_t values[16];
 };
 }
 
@@ -117,7 +117,7 @@ struct F128Cpp : public F128 {
 
 struct FFIOneKiloByteCpp : public FFIOneKibiBit {
   int64_t as_i64() const noexcept {
-    return values[11] + values[55] + values[77];
+    return values[4] + values[8] + values[12];
   }
 
   bool operator<(const FFIOneKiloByteCpp& other) const noexcept {
@@ -229,26 +229,26 @@ int int_cmp_func(const void* a_ptr, const void* b_ptr) {
   return (is_less * -1) + (is_more * 1);
 }
 
-// This is broken, crumsort and fluxsort break the individual F128 values.
-//
-// static constexpr bool F128_SUPPORT = sizeof(F128) == sizeof(long double) &&
-//                                      alignof(F128) <= alignof(max_align_t);
+int f128_c_cmp_func(const void* a_ptr, const void* b_ptr) {
+  const F128Cpp* a_p = *(F128Cpp **)(a_ptr);
+  const F128Cpp* b_p = *(F128Cpp **)(b_ptr);
+  const F128Cpp a = *a_p;
+  const F128Cpp b = *b_p;
 
-// int f128_c_cmp_func(const void* a_ptr, const void* b_ptr) {
-//   const F128Cpp a = *static_cast<const F128Cpp*>(a_ptr);
-//   const F128Cpp b = *static_cast<const F128Cpp*>(b_ptr);
+  const int is_less = a < b;
+  const bool is_more = a > b;
+  return (is_less * -1) + (is_more * 1);
+}
 
-//   printf("a.x: %f, a.y: %f\n", a.x, a.y);
-//   printf("b.x: %f, b.y: %f\n", b.x, b.y);
-//   const int is_less = a < b;
-//   printf("Is less: %d\n", is_less);
+int onek_c_cmp_func(const void* a_ptr, const void* b_ptr) {
+  const FFIOneKiloByteCpp* a_p = *(FFIOneKiloByteCpp **)(a_ptr);
+  const FFIOneKiloByteCpp* b_p = *(FFIOneKiloByteCpp **)(b_ptr);
+  const FFIOneKiloByteCpp a = *a_p;
+  const FFIOneKiloByteCpp b = *b_p;
 
-//   if (a < b) {
-//     return -1;
-//   } else if (a > b) {
-//     return 1;
-//   }
-//   return 0;
-// }
+  const int is_less = a < b;
+  const bool is_more = a > b;
+  return (is_less * -1) + (is_more * 1);
+}
 
 #endif

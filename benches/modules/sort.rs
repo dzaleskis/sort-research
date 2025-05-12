@@ -132,6 +132,9 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     #[cfg(feature = "c_fluxsort")]
     bench_inst!(stable::c_fluxsort);
 
+    #[cfg(feature = "c_quadsort")]
+    bench_inst!(stable::c_quadsort);
+
     #[cfg(feature = "golang_std")]
     bench_inst!(stable::golang_std);
 
@@ -149,6 +152,9 @@ pub fn bench<T: Ord + std::fmt::Debug>(
 
     #[cfg(feature = "rust_grailsort")]
     bench_inst!(stable::rust_grailsort);
+
+    #[cfg(feature = "max_mergesort")]
+    bench_inst!(stable::rust_max_mergesort);
 
     // --- Unstable sorts ---
 
@@ -267,9 +273,6 @@ pub fn bench<T: Ord + std::fmt::Debug>(
 
     #[cfg(feature = "cpp_timsort")]
     bench_inst!(stable::cpp_timsort_og);
-
-    #[cfg(feature = "cpp_timsort")]
-    bench_inst!(stable::cpp_timsort_cross);
 
     #[cfg(feature = "cpp_ips4o")]
     bench_inst!(unstable::cpp_ips4o);

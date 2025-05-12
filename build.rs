@@ -70,7 +70,7 @@ fn build_and_link_cpp_pdqsort() {}
 
 #[cfg(feature = "cpp_timsort")]
 fn build_and_link_cpp_timsort() {
-    build_and_link_cpp_sort("cpp_timsort_og", None);
+    build_and_link_cpp_sort("cpp_timsort", None);
     build_and_link_cpp_sort("cpp_timsort_cross", None);
 }
 
@@ -308,6 +308,21 @@ fn build_and_link_c_fluxsort() {
 #[cfg(not(feature = "c_fluxsort"))]
 fn build_and_link_c_fluxsort() {}
 
+#[cfg(feature = "c_quadsort")]
+fn build_and_link_c_quadsort() {
+    build_and_link_cpp_sort(
+        "c_quadsort",
+        Some(|builder: &mut cc::Build| {
+            builder.compiler(CLANG_PATH); // clang can generate cmov which yields better perf.
+
+            None
+        }),
+    );
+}
+
+#[cfg(not(feature = "c_quadsort"))]
+fn build_and_link_c_quadsort() {}
+
 #[cfg(feature = "cpp_std_sys")]
 fn build_and_link_cpp_std_sys() {
     build_and_link_cpp_sort(
@@ -387,6 +402,7 @@ fn main() {
     build_and_link_c_std_sys();
     build_and_link_c_crumsort();
     build_and_link_c_fluxsort();
+    build_and_link_c_quadsort();
     build_and_link_cpp_std_sys();
     build_and_link_cpp_std_libcxx();
     build_and_link_cpp_std_gcc4_3();
