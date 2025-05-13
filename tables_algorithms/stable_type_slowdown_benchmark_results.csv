@@ -1,0 +1,5 @@
+Type,c_quadsort_stable,cpp_powersort_4way_stable,cpp_powersort_stable,cpp_std_sys_stable,cpp_timsort_stable,rust_max_mergesort_stable,rust_std_vendored_stable
+u64,1.21,2.92,2.57,6.88,1.54,1.26,2.20
+f128,1.68,2.39,2.59,2.92,1.83,1.27,2.50
+1k,1.74,1.81,2.01,3.33,1.55,1.16,1.43
+string,1.59,1.47,1.33,2.51,1.27,1.12,1.58

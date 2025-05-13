@@ -1,0 +1,8 @@
+Type,Algorithm,Geometric average slowdown
+combined,cpp_timsort_stable,1.53
+combined,cpp_std_sys_stable,3.60
+combined,rust_max_mergesort_stable,1.20
+combined,cpp_powersort_4way_stable,2.08
+combined,c_quadsort_stable,1.54
+combined,cpp_powersort_stable,2.05
+combined,rust_std_vendored_stable,1.88

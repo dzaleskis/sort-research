@@ -1,0 +1,5 @@
+Type,cpp_pdqsort_unstable,cpp_std_sys_unstable,rust_ipnsort_unstable,rust_max_quicksort_unstable,rust_std_vendored_unstable
+u64,1.83,2.82,1.01,1.00,1.69
+f128,2.14,2.28,1.01,1.00,1.27
+1k,1.39,1.49,1.17,1.07,1.14
+string,1.36,1.99,1.01,1.01,1.07
