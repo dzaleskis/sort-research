@@ -11,7 +11,7 @@ uint32_t sort_by_impl(T* data,
                       uint8_t* ctx) noexcept {
   try {
     qsort(static_cast<void*>(data), len, sizeof(T),
-          make_compare_fn_c(cmp_fn, ctx));
+          make_compare_by_fn_c(cmp_fn, ctx));
   } catch (...) {
     return 1;
   }

@@ -116,3 +116,7 @@ pub mod golang_std;
 // Call max quicksort
 #[cfg(feature = "max_quicksort")]
 pub mod rust_max_quicksort;
+
+// Call max quicksort
+#[cfg(feature = "max_synergistic_sort")]
+pub mod rust_max_unstable_synergistic_sort;

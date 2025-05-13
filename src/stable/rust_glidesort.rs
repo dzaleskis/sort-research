@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-sort_impl!("rust_glidesort_synergistic");
+sort_impl!("rust_glidesort_stable_synergistic");
 
 pub fn sort<T: Ord>(data: &mut [T]) {
     glidesort::sort(data);

@@ -160,7 +160,10 @@ pub fn bench<T: Ord + std::fmt::Debug>(
     bench_inst!(unstable::rust_max_quicksort);
 
     #[cfg(feature = "max_synergistic_sort")]
-    bench_inst!(stable::rust_max_synergistic_sort);
+    bench_inst!(stable::rust_max_stable_synergistic_sort);
+
+    #[cfg(feature = "max_synergistic_sort")]
+    bench_inst!(unstable::rust_max_unstable_synergistic_sort);
 
     // --- Unstable sorts ---
 

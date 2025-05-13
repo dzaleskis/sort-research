@@ -1,11 +1,11 @@
 use std::cmp::Ordering;
 
-sort_impl!("rust_driftsort_stable_synergistic");
+sort_impl!("rust_max_stable_synergistic");
 
 pub fn sort<T: Ord>(data: &mut [T]) {
-    driftsort::sort(data);
+    sysort::sort(data);
 }
 
 pub fn sort_by<T, F: FnMut(&T, &T) -> Ordering>(data: &mut [T], compare: F) {
-    driftsort::sort_by(data, compare);
+    sysort::sort_by(data, compare);
 }

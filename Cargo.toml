@@ -111,7 +111,7 @@ default = [
     # "cpp_nanosort",
     # "cpp_wikisort",
     # "c_std_sys",
-    # "c_crumsort",
+    "c_crumsort",
     "c_fluxsort",
     "c_quadsort",
     # "singeli_singelisort",

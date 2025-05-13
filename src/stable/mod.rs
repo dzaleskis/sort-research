@@ -4,7 +4,7 @@ pub mod rust_std;
 pub mod rust_max_mergesort;
 
 #[cfg(feature = "max_synergistic_sort")]
-pub mod rust_max_synergistic_sort;
+pub mod rust_max_stable_synergistic_sort;
 
 #[cfg(feature = "rust_std_vendored")]
 pub mod rust_std_vendored;

@@ -1,1 +1,1 @@
-ffi_sort_impl!("c_crumsort_unstable", crumsort_unstable);
+ffi_sort_impl!("c_crumsort_unstable_synergistic", crumsort_unstable);

@@ -183,7 +183,7 @@ auto make_compare_fn(F cmp_fn, uint8_t* ctx) {
 typedef int CMPFUNC(const void* a, const void* b);
 
 template <typename T>
-CMPFUNC* make_compare_fn_c(CompResult (*cmp_fn)(const T&, const T&, uint8_t*),
+CMPFUNC* make_compare_by_fn_c(CompResult (*cmp_fn)(const T&, const T&, uint8_t*),
                            uint8_t* ctx) {
   thread_local static CompResult (*cmp_fn_local)(const T&, const T&, uint8_t*) =
       nullptr;
@@ -197,6 +197,30 @@ CMPFUNC* make_compare_fn_c(CompResult (*cmp_fn)(const T&, const T&, uint8_t*),
     const T b = *static_cast<const T*>(b_ptr);
 
     const auto comp_result = cmp_fn_local(a, b, ctx_local);
+
+    if (comp_result.is_panic) {
+      throw std::runtime_error{"panic in Rust comparison function"};
+    }
+
+    return comp_result.cmp_result;
+  };
+}
+
+template <typename T>
+CMPFUNC* make_indirect_compare_by_fn_c(CompResult (*cmp_fn)(const T&, const T&, uint8_t*),
+                           uint8_t* ctx) {
+  thread_local static CompResult (*cmp_fn_local)(const T&, const T&, uint8_t*) =
+      nullptr;
+  thread_local static uint8_t* ctx_local = nullptr;
+
+  cmp_fn_local = cmp_fn;
+  ctx_local = ctx;
+
+  return [](const void* a_ptr, const void* b_ptr) -> int {
+      const T* a = *(T **)(a_ptr);
+      const T* b = *(T **)(b_ptr);
+
+    const auto comp_result = cmp_fn_local(*a, *b, ctx_local);
 
     if (comp_result.is_panic) {
       throw std::runtime_error{"panic in Rust comparison function"};

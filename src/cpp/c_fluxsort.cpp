@@ -14,7 +14,57 @@ uint32_t sort_by_impl(T* data,
                       uint8_t* ctx) noexcept {
   try {
     fluxsort(static_cast<void*>(data), len, sizeof(T),
-             make_compare_fn_c(cmp_fn, ctx));
+             make_compare_by_fn_c(cmp_fn, ctx));
+  } catch (...) {
+    return 1;
+  }
+
+  return 0;
+}
+
+template <typename T, typename T_CPP>
+uint32_t indirect_sort_impl(T* data,size_t len) noexcept {
+  try {
+      T** ptrArray = static_cast<T**>(malloc(sizeof(T*) * len));
+      for (int i = 0; i < len; i++) {
+          ptrArray[i] = &data[i];
+      }
+
+      fluxsort(static_cast<void*>(ptrArray), len, sizeof(T*), indirect_c_cmp_func<T_CPP>);
+
+      T* outArray = static_cast<T*>(malloc(sizeof(T) * len));
+      for (int i = 0; i < len; i++) {
+          outArray[i] = *ptrArray[i];
+      }
+
+      for (int i = 0; i < len; i++) {
+          data[i] = outArray[i];
+      }
+  } catch (...) {
+    return 1;
+  }
+
+  return 0;
+}
+
+template <typename T>
+uint32_t indirect_sort_by_impl(T* data,size_t len, CompResult (*cmp_fn)(const T&, const T&, uint8_t*), uint8_t* ctx) noexcept {
+  try {
+      T** ptrArray = static_cast<T**>(malloc(sizeof(T*) * len));
+      for (int i = 0; i < len; i++) {
+          ptrArray[i] = &data[i];
+      }
+
+      fluxsort(static_cast<void*>(ptrArray), len, sizeof(T*), make_indirect_compare_by_fn_c(cmp_fn, ctx));
+
+      T* outArray = static_cast<T*>(malloc(sizeof(T) * len));
+      for (int i = 0; i < len; i++) {
+          outArray[i] = *ptrArray[i];
+      }
+
+      for (int i = 0; i < len; i++) {
+          data[i] = outArray[i];
+      }
   } catch (...) {
     return 1;
   }
@@ -56,21 +106,7 @@ uint32_t fluxsort_stable_u64_by(uint64_t* data,
 // --- ffi_string ---
 
 void fluxsort_stable_ffi_string(FFIString* data, size_t len) {
-    FFIString** ptrArray = static_cast<FFIString**>(malloc(sizeof(FFIString*) * len));
-    for (int i = 0; i < len; i++) {
-        ptrArray[i] = &data[i];
-    }
-
-    fluxsort(static_cast<void*>(ptrArray), len, sizeof(FFIString*), indirect_c_cmp_func<FFIStringCpp>);
-
-    FFIString* outArray = static_cast<FFIString*>(malloc(sizeof(FFIString) * len));
-    for (int i = 0; i < len; i++) {
-        outArray[i] = *ptrArray[i];
-    }
-
-    for (int i = 0; i < len; i++) {
-        data[i] = outArray[i];
-    }
+    indirect_sort_impl<FFIString, FFIStringCpp>(data, len);
 }
 
 uint32_t fluxsort_stable_ffi_string_by(FFIString* data,
@@ -79,28 +115,13 @@ uint32_t fluxsort_stable_ffi_string_by(FFIString* data,
                                                             const FFIString&,
                                                             uint8_t*),
                                        uint8_t* ctx) {
-  printf("Not supported\n");
-  return 1;
+    return indirect_sort_by_impl<FFIString>(data, len, cmp_fn, ctx);
 }
 
 // --- f128 ---
 
 void fluxsort_stable_f128(F128* data, size_t len) {
-  F128** ptrArray = static_cast<F128**>(malloc(sizeof(F128*) * len));
-  for (int i = 0; i < len; i++) {
-      ptrArray[i] = &data[i];
-  }
-
-  fluxsort(static_cast<void*>(ptrArray), len, sizeof(F128*), indirect_c_cmp_func<F128Cpp>);
-
-  F128* outArray = static_cast<F128*>(malloc(sizeof(F128) * len));
-  for (int i = 0; i < len; i++) {
-      outArray[i] = *ptrArray[i];
-  }
-
-  for (int i = 0; i < len; i++) {
-      data[i] = outArray[i];
-  }
+  indirect_sort_impl<F128, F128Cpp>(data, len);
 }
 
 uint32_t fluxsort_stable_f128_by(F128* data,
@@ -109,28 +130,13 @@ uint32_t fluxsort_stable_f128_by(F128* data,
                                                       const F128&,
                                                       uint8_t*),
                                  uint8_t* ctx) {
-  printf("Not supported\n");
-  return 1;
+    return indirect_sort_by_impl<F128>(data, len, cmp_fn, ctx);
 }
 
 // --- 1k ---
 
 void fluxsort_stable_1k(FFIOneKibiBit* data, size_t len) {
-    FFIOneKibiBit** ptrArray = static_cast<FFIOneKibiBit**>(malloc(sizeof(FFIOneKibiBit*) * len));
-    for (int i = 0; i < len; i++) {
-        ptrArray[i] = &data[i];
-    }
-
-    fluxsort(static_cast<void*>(ptrArray), len, sizeof(FFIOneKibiBit*), indirect_c_cmp_func<FFIOneKiloByteCpp>);
-
-    FFIOneKibiBit* outArray = static_cast<FFIOneKibiBit*>(malloc(sizeof(FFIOneKibiBit) * len));
-    for (int i = 0; i < len; i++) {
-        outArray[i] = *ptrArray[i];
-    }
-
-    for (int i = 0; i < len; i++) {
-        data[i] = outArray[i];
-    }
+    indirect_sort_impl<FFIOneKibiBit, FFIOneKiloByteCpp>(data, len);
 }
 
 uint32_t fluxsort_stable_1k_by(FFIOneKibiBit* data,
@@ -139,7 +145,6 @@ uint32_t fluxsort_stable_1k_by(FFIOneKibiBit* data,
                                                     const FFIOneKibiBit&,
                                                     uint8_t*),
                                uint8_t* ctx) {
-  printf("Not supported\n");
-  return 1;
+    return indirect_sort_by_impl<FFIOneKibiBit>(data, len, cmp_fn, ctx);
 }
 }  // extern "C"
