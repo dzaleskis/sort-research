@@ -1,0 +1,5 @@
+Type,pivot_compact_median_9,pivot_median_3,pivot_median_9,pivot_recursive_median_3
+u64,1.00,1.54,1.04,1.06
+f128,1.01,1.54,1.02,1.04
+1k,1.01,1.29,1.03,1.06
+string,1.19,1.36,1.03,1.03

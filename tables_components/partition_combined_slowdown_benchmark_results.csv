@@ -1,0 +1,7 @@
+Type,Algorithm,Geometric average slowdown
+combined,Hoare branchless block,1.14
+combined,Hoare branchy cyclic,1.65
+combined,Lomuto branchless block,1.35
+combined,Lomuto branchless cyclic,1.16
+combined,Lomuto branchy,1.80
+combined,Stable,1.49

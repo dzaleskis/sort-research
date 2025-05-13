@@ -1,0 +1,7 @@
+Pattern,merge_routine_bidirectional,merge_routine_branchless,merge_routine_cross,merge_routine_gallop
+random,1.05,1.55,1.06,1.70
+random_d20,1.22,1.68,1.00,1.20
+random_m50,1.07,1.46,1.03,1.59
+random_p5,1.98,2.91,1.21,1.00
+random_s95,1.45,1.82,1.00,1.31
+random_z1,1.06,1.50,1.04,1.44

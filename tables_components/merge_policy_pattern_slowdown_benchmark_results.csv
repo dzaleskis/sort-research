@@ -1,0 +1,7 @@
+Pattern,merge_policy_2_merge,merge_policy_powersort,merge_policy_powersort_4way,merge_policy_shivers,merge_policy_timsort
+random,1.03,1.02,1.01,1.03,1.02
+random_d20,1.02,1.01,1.02,1.02,1.02
+random_m50,1.03,1.01,1.09,1.02,1.03
+random_p5,1.11,1.02,1.11,1.04,1.04
+random_s95,1.99,1.00,1.38,2.45,1.01
+random_z1,1.03,1.01,1.02,1.03,1.03

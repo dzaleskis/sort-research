@@ -1,0 +1,5 @@
+Type,merge_policy_2_merge,merge_policy_powersort,merge_policy_powersort_4way,merge_policy_shivers,merge_policy_timsort
+u64,1.19,1.00,1.08,1.24,1.01
+f128,1.18,1.00,1.09,1.22,1.01
+1k,1.20,1.03,1.13,1.24,1.05
+string,1.09,1.02,1.09,1.06,1.03

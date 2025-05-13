@@ -1,0 +1,5 @@
+Type,Algorithm,Geometric average slowdown
+combined,Bidirectional,1.27
+combined,Branchless,1.77
+combined,Cross,1.05
+combined,Gallop,1.35

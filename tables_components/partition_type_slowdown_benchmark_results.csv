@@ -1,0 +1,5 @@
+Type,partition_hoare_branchless_block,partition_hoare_branchy_cyclic,partition_lomuto_branchless_block,partition_lomuto_branchless_cyclic,partition_lomuto_branchy,partition_stable
+u64,1.46,2.40,1.47,1.02,2.17,1.28
+f128,1.05,2.10,1.15,1.00,2.10,1.38
+1k,1.08,1.23,1.70,1.78,1.90,2.51
+string,1.02,1.19,1.15,1.01,1.22,1.12

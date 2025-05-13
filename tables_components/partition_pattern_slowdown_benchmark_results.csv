@@ -1,0 +1,7 @@
+Pattern,partition_hoare_branchless_block,partition_hoare_branchy_cyclic,partition_lomuto_branchless_block,partition_lomuto_branchless_cyclic,partition_lomuto_branchy,partition_stable
+random,1.11,2.45,1.27,1.11,2.59,1.37
+random_d20,1.12,2.28,1.33,1.15,2.47,1.50
+random_m50,1.22,1.06,1.41,1.21,1.15,1.70
+random_p5,1.14,1.24,1.44,1.21,1.51,1.72
+random_s95,1.13,1.14,1.36,1.18,1.25,1.31
+random_z1,1.13,2.37,1.29,1.13,2.50,1.40

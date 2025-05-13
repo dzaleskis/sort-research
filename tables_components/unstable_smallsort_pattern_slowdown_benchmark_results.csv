@@ -1,0 +1,7 @@
+Pattern,unstable_smallsort_block,unstable_smallsort_insertion,unstable_smallsort_network
+random,1.05,1.15,1.03
+random_d20,1.02,1.03,1.03
+random_m50,1.02,1.13,1.10
+random_p5,1.01,1.05,1.02
+random_s95,1.02,1.04,1.12
+random_z1,1.03,1.06,1.05

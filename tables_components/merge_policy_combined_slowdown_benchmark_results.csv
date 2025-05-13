@@ -1,0 +1,6 @@
+Type,Algorithm,Geometric average slowdown
+combined,2-merge,1.16
+combined,Powersort,1.01
+combined,Powersort 4-way,1.10
+combined,ShiversSort,1.19
+combined,Timsort,1.03

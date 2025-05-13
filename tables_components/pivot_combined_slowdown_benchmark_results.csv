@@ -1,0 +1,5 @@
+Type,Algorithm,Geometric average slowdown
+combined,Median 3,1.43
+combined,Compact median 9,1.05
+combined,Median 9,1.03
+combined,Recursive median 3,1.05

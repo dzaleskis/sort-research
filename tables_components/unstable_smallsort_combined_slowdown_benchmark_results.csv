@@ -1,0 +1,4 @@
+Type,Algorithm,Geometric average slowdown
+combined,Block sort,1.02
+combined,Insertion sort,1.07
+combined,Sorting network,1.06

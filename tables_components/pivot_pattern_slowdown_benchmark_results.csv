@@ -1,0 +1,7 @@
+Pattern,pivot_compact_median_9,pivot_median_3,pivot_median_9,pivot_recursive_median_3
+random,1.01,1.03,1.01,1.01
+random_d20,1.02,1.03,1.02,1.01
+random_m50,1.28,3.62,1.08,1.11
+random_p5,1.01,1.00,1.01,1.02
+random_s95,1.00,2.13,1.04,1.11
+random_z1,1.01,1.02,1.01,1.01
