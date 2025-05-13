@@ -89,7 +89,7 @@ pattern_slowdown_df = pd.DataFrame(pattern_slowdown_results, columns=['Pattern',
 type_slowdown_df_pivot = pattern_slowdown_df.pivot(index='Pattern', columns='Algorithm', values='Geometric average slowdown')
 type_slowdown_df_pivot.insert(0, 'Pattern', type_slowdown_df_pivot.index)
 
-types_order = ['random', 'random_d20', 'random_m50', 'random_p5', 'random_s95', 'random_z1', 'general']
+types_order = ['ascending', 'descending', 'random', 'random_d20', 'random_m50', 'random_p5', 'random_s95', 'random_z1', 'general']
 def order_fn(x):
     return types_order.index(x)
 

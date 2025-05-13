@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # types=("pivot" "partition" "unstable_smallsort" "merge_policy" "merge_routine" "stable_smallsort")
-# types=("stable" "unstable" "synergistic")
-types=("stable")
+types=("stable" "unstable" "synergistic")
 
 for type in "${types[@]}"
 do
