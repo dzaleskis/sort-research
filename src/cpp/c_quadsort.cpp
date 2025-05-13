@@ -40,6 +40,10 @@ uint32_t indirect_sort_impl(T* data,size_t len) noexcept {
       for (int i = 0; i < len; i++) {
           data[i] = outArray[i];
       }
+
+
+      free(ptrArray);
+      free(outArray);
   } catch (...) {
     return 1;
   }
@@ -65,6 +69,10 @@ uint32_t indirect_sort_by_impl(T* data,size_t len, CompResult (*cmp_fn)(const T&
       for (int i = 0; i < len; i++) {
           data[i] = outArray[i];
       }
+
+
+      free(ptrArray);
+      free(outArray);
   } catch (...) {
     return 1;
   }
