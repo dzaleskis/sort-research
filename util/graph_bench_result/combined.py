@@ -13,7 +13,7 @@ values = df['Geometric average slowdown']
 
 # Plot the data
 fig, ax = plt.subplots()
-ax.bar(labels, values, color=['blue', 'green', 'red', 'purple', 'orange', 'yellow'])
+ax.bar(labels, values, color=['blue', 'cyan', 'green', 'red', 'purple', 'orange', 'yellow'])
 
 # Set labels
 ax.set_ylabel('Combined slowdown')
