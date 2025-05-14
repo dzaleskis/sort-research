@@ -1,7 +1,7 @@
 Type,Algorithm,Geometric average slowdown
-combined,rust_max_unstable_synergistic,1.04
-combined,rust_max_stable_synergistic,1.15
-combined,c_crumsort_unstable_synergistic,1.99
-combined,c_fluxsort_stable_synergistic,2.01
-combined,rust_driftsort_stable_synergistic,1.39
-combined,rust_glidesort_stable_synergistic,1.36
+combined,Max Synergistic Stable,1.16
+combined,Crumsort,1.95
+combined,Max Synergistic Unstable,1.02
+combined,Fluxsort,1.95
+combined,Glidesort,1.39
+combined,Driftsort,1.50

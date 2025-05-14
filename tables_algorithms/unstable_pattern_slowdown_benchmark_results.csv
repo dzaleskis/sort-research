@@ -1,9 +1,7 @@
-Pattern,cpp_ips4o_unstable,cpp_pdqsort_unstable,cpp_std_sys_unstable,rust_ipnsort_unstable,rust_max_quicksort_unstable,rust_std_vendored_unstable
-ascending,1.05,1.96,2.00,1.00,1.01,1.13
-descending,1.13,2.08,2.01,1.03,1.03,1.11
-random,2.17,2.03,2.47,1.13,1.00,1.36
-random_d20,2.22,1.78,2.29,1.09,1.00,1.31
-random_m50,1.64,1.42,2.07,1.00,1.04,1.29
-random_p5,3.03,1.17,2.61,1.02,1.04,1.28
-random_s95,1.56,1.22,1.24,1.02,1.05,1.43
-random_z1,2.18,1.83,2.38,1.11,1.00,1.30
+Pattern,C++ Unstable,Ipnsort,Ips4o,Max Quicksort,Pdqsort,Rust Unstable
+random,2.47,1.13,2.17,1.00,2.03,1.36
+random_d20,2.29,1.09,2.22,1.00,1.78,1.31
+random_m50,2.07,1.00,1.64,1.04,1.42,1.29
+random_p5,2.61,1.02,3.03,1.04,1.17,1.28
+random_s95,1.24,1.02,1.56,1.05,1.22,1.43
+random_z1,2.38,1.11,2.18,1.00,1.83,1.30

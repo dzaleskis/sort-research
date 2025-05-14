@@ -1,5 +1,5 @@
-Type,cpp_ips4o_unstable,cpp_pdqsort_unstable,cpp_std_sys_unstable,rust_ipnsort_unstable,rust_max_quicksort_unstable,rust_std_vendored_unstable
-u64,1.84,1.83,2.80,1.01,1.00,1.69
-f128,1.80,2.14,2.29,1.01,1.00,1.28
-1k,1.78,1.40,1.51,1.16,1.07,1.13
-string,1.66,1.36,1.97,1.03,1.01,1.07
+Type,C++ Unstable,Ipnsort,Ips4o,Max Quicksort,Pdqsort,Rust Unstable
+u64,2.76,1.01,2.16,1.00,1.55,1.82
+f128,2.49,1.02,2.17,1.00,2.26,1.37
+1k,1.43,1.21,2.04,1.08,1.30,1.17
+string,2.04,1.02,1.97,1.00,1.24,1.07

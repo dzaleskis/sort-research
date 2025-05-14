@@ -1,0 +1,17 @@
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|X|X|X|X|X|}
+\hline
+ Pattern & Crumsort & Driftsort & Fluxsort & Glidesort & Max \newline Synergistic \newline Stable & Max \newline Synergistic \newline Unstable \\ \hline
+ random & 1.60 & 1.33 & 1.59 & 1.11 & 1.21 & \textbf{1.00} \\ \hline
+ random\_d20 & 1.60 & 1.39 & 1.65 & 1.34 & 1.25 & \textbf{1.00} \\ \hline
+ random\_m50 & 1.92 & 1.54 & 1.81 & \textbf{1.01} & 1.10 & 1.12 \\ \hline
+ random\_p5 & 3.27 & 1.65 & 3.33 & 2.58 & 1.20 & \textbf{1.01} \\ \hline
+ random\_s95 & 2.29 & 1.87 & 2.29 & 1.57 & 1.02 & \textbf{1.00} \\ \hline
+ random\_z1 & 1.50 & 1.32 & 1.51 & 1.17 & 1.20 & \textbf{1.00} \\ \hline
+\end{tabularx}
+\caption{Slowdown of synergistic based on input data pattern}
+\label{tab:synergistic_patterns}
+\end{table}
+    

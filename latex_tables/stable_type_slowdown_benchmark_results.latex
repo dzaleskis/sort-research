@@ -1,0 +1,15 @@
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|X|X|X|X|X|X|}
+\hline
+ Type & C++ \newline Stable & Max \newline Mergesort & Powersort & Powersort \newline 4-Way & Quadsort & Rust \newline Stable & Timsort \\ \hline
+ u64 & 3.55 & \textbf{1.16} & 2.46 & 2.91 & 1.20 & 2.44 & 1.70 \\ \hline
+ f128 & 1.83 & \textbf{1.26} & 3.05 & 2.80 & 1.45 & 3.12 & 2.23 \\ \hline
+ 1k & 2.00 & \textbf{1.18} & 1.91 & 1.66 & 1.32 & 1.55 & 1.77 \\ \hline
+ string & 1.71 & \textbf{1.09} & 1.34 & 1.54 & 1.45 & 1.76 & 1.38 \\ \hline
+\end{tabularx}
+\caption{Slowdown of stable based on input data type}
+\label{tab:stable_types}
+\end{table}
+    

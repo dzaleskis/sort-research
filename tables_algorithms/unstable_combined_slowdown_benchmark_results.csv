@@ -1,7 +1,7 @@
 Type,Algorithm,Geometric average slowdown
-combined,rust_max_quicksort_unstable,1.02
-combined,cpp_pdqsort_unstable,1.65
-combined,cpp_ips4o_unstable,1.77
-combined,rust_std_vendored_unstable,1.27
-combined,rust_ipnsort_unstable,1.05
-combined,cpp_std_sys_unstable,2.09
+combined,Ips4o,2.08
+combined,Max Quicksort,1.02
+combined,C++ Unstable,2.12
+combined,Pdqsort,1.54
+combined,Ipnsort,1.06
+combined,Rust Unstable,1.33

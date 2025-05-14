@@ -1,0 +1,15 @@
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|X|X|X|X|X|}
+\hline
+ Type & Crumsort & Driftsort & Fluxsort & Glidesort & Max \newline Synergistic \newline Stable & Max \newline Synergistic \newline Unstable \\ \hline
+ u64 & 1.55 & 1.56 & 1.51 & 1.54 & 1.03 & \textbf{1.03} \\ \hline
+ f128 & 2.44 & 1.60 & 2.46 & 1.42 & 1.10 & \textbf{1.00} \\ \hline
+ 1k & 1.95 & 1.53 & 1.98 & 1.36 & 1.47 & \textbf{1.02} \\ \hline
+ string & 1.97 & 1.33 & 1.96 & 1.24 & 1.07 & \textbf{1.03} \\ \hline
+\end{tabularx}
+\caption{Slowdown of synergistic based on input data type}
+\label{tab:synergistic_types}
+\end{table}
+    
