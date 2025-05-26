@@ -2,7 +2,8 @@ from PIL import Image
 
 plot_types = ['scaling', 'single_size']
 data_types = ['u64', 'f128', '1k', 'string']
-bench_types = ["pivot", "partition", "unstable_smallsort", "merge_policy", "merge_routine", "stable_smallsort"]
+# bench_types = ["pivot", "partition", "unstable_smallsort", "merge_policy", "merge_routine", "stable_smallsort"]
+bench_types = ["stable", "unstable", "synergistic"]
 target_size = '1000000'
 target_pattern = 'random'
 

@@ -217,7 +217,7 @@ def build_implementation_meta_info():
     meta_info = {
         # Stable
         "c_fluxsort_stable_synergistic": (palette[0], "square"),
-        "c_quadsort_stable_stable": (palette[0], "square"),
+        "c_quadsort_stable": (palette[0], "square"),
         "cpp_std_sys_stable": (palette[1], "square"),
         "cpp_std_gnu_stable": (palette[1], "square"),
         "cpp_std_msvc_stable": (palette[1], "square"),
